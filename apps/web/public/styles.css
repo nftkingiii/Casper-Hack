@@ -84,26 +84,9 @@ a {
 .brand-mark {
   width: 34px;
   height: 34px;
-  display: inline-block;
+  display: block;
   border-radius: 8px;
-  background: var(--ink);
-  position: relative;
-}
-
-.brand-mark::before {
-  content: "";
-  position: absolute;
-  inset: 9px;
-  border: 2px solid var(--ok);
-  border-radius: 6px;
-}
-
-.brand-mark::after {
-  content: "";
-  position: absolute;
-  inset: 14px;
-  border-radius: 50%;
-  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(7, 12, 20, 0.16);
 }
 
 .nav-links {

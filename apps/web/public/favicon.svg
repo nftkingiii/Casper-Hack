@@ -1,0 +1,10 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Agent Blackbox favicon concept</title>
+  <desc id="desc">A dark rounded blackbox icon with a teal verified receipt core.</desc>
+  <rect width="128" height="128" rx="30" fill="#070C14"/>
+  <rect x="12" y="12" width="104" height="104" rx="23" stroke="#172231" stroke-width="2"/>
+  <path d="M64 29L92 45V79L64 95L36 79V45L64 29Z" fill="#0D1A25" stroke="#25D294" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M64 44L80 53V75L64 84L48 75V53L64 44Z" fill="#EDF5F7"/>
+  <circle cx="64" cy="64" r="9" fill="#087C6D"/>
+  <path d="M60.5 64L63.5 67L69 60.5" stroke="#EDF5F7" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

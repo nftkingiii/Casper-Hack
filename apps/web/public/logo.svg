@@ -1,0 +1,24 @@
+<svg width="960" height="360" viewBox="0 0 960 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Agent Blackbox logo concept</title>
+  <desc id="desc">A dark rounded blackbox mark with a teal verified receipt core and Agent Blackbox wordmark.</desc>
+  <rect width="960" height="360" rx="28" fill="#EDF5F7"/>
+  <g transform="translate(86 84)">
+    <rect x="0" y="0" width="192" height="192" rx="42" fill="#070C14"/>
+    <rect x="18" y="18" width="156" height="156" rx="32" stroke="#172231" stroke-width="2"/>
+    <path d="M96 47L138 71V121L96 145L54 121V71L96 47Z" fill="#0D1A25" stroke="#25D294" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M96 67L120 81V111L96 125L72 111V81L96 67Z" fill="#EDF5F7"/>
+    <circle cx="96" cy="96" r="13" fill="#087C6D"/>
+    <path d="M91 96L95 100L103 91" stroke="#EDF5F7" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M142 142H158" stroke="#25D294" stroke-width="8" stroke-linecap="round"/>
+    <path d="M34 50H50" stroke="#25D294" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(328 106)">
+    <text x="0" y="72" fill="#070C14" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="72" font-weight="850" letter-spacing="-2">Agent Blackbox</text>
+    <text x="4" y="122" fill="#5B6876" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="26" font-weight="650">Verifiable receipts for autonomous actions</text>
+    <g transform="translate(4 148)">
+      <rect x="0" y="0" width="148" height="38" rx="10" fill="#FFFFFF" stroke="#D3E0E5"/>
+      <circle cx="22" cy="19" r="6" fill="#25D294"/>
+      <text x="38" y="26" fill="#33404D" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="780">Casper proof</text>
+    </g>
+  </g>
+</svg>
