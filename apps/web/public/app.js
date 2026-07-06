@@ -116,6 +116,12 @@ function render(data) {
 
   setHref("contractLink", explorerContract(payload.contractHash ?? TESTNET_PROOF.contractHash));
   setHref("receiptTxLink", explorerTransaction(TESTNET_PROOF.receiptTransaction));
+  setHref("contractExplorerLink", explorerContract(payload.contractHash ?? TESTNET_PROOF.contractHash));
+  setHref("installTxExplorerLink", explorerTransaction(TESTNET_PROOF.installTransaction));
+  setHref("receiptTxExplorerLink", explorerTransaction(TESTNET_PROOF.receiptTransaction));
+  text("contractExplorerLabel", shortHash(payload.contractHash ?? TESTNET_PROOF.contractHash, 12, 10));
+  text("installTxExplorerLabel", shortHash(TESTNET_PROOF.installTransaction, 12, 10));
+  text("receiptTxExplorerLabel", shortHash(TESTNET_PROOF.receiptTransaction, 12, 10));
 
   renderTimeline(receipt, deployResult);
   text("payloadJson", JSON.stringify({
@@ -123,51 +129,6 @@ function render(data) {
     proof: TESTNET_PROOF
   }, null, 2));
 
-  initScrollReveal();
-}
-
-function initScrollReveal() {
-  const targets = [
-    ...document.querySelectorAll([
-      ".intro-band",
-      ".section-heading",
-      ".domain-grid article",
-      ".guardrail-section",
-      ".guardrail-grid article",
-      ".proof-stage",
-      ".metrics article",
-      ".workspace",
-      ".payload-panel"
-    ].join(","))
-  ];
-
-  if (!targets.length) return;
-
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
-    targets.forEach((target) => target.classList.add("is-visible"));
-    return;
-  }
-
-  targets.forEach((target, index) => {
-    target.classList.add("reveal-on-scroll");
-    target.style.setProperty("--reveal-delay", "0ms");
-    if (target.matches(".proof-stage, .workspace, .payload-panel")) {
-      target.dataset.reveal = "scale";
-    }
-  });
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      entry.target.classList.add("is-visible");
-      observer.unobserve(entry.target);
-    });
-  }, {
-    rootMargin: "0px 0px 35% 0px",
-    threshold: 0
-  });
-
-  targets.forEach((target) => observer.observe(target));
 }
 
 document.getElementById("copyPayload").addEventListener("click", async () => {
