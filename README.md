@@ -4,6 +4,11 @@ Verifiable execution receipts for autonomous AI agents on Casper.
 
 Agent Blackbox is a "flight recorder" for AI agents. Every important agent action becomes a signed receipt containing the task intent, policy decision, tool call, cost, transaction hash, and result hash. The receipt body can stay off-chain while Casper stores a tamper-evident digest and emits events for dashboards, monitors, and future dispute resolution.
 
+## Links
+
+- Live demo: https://agent-blackbox-blush.vercel.app/
+- Repository: https://github.com/nftkingiii/agent-blackbox
+
 ## Casper Testnet Deployment
 
 - Account: `020227c032dc0cda3475482a27d86c2ccbd7f3444f7a17dfc08ce1a16087aafca8a1`

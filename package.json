@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "description": "Verifiable execution receipts for autonomous AI agents on Casper.",
+  "homepage": "https://agent-blackbox-blush.vercel.app/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nftkingiii/agent-blackbox.git"
+  },
   "scripts": {
     "dev": "node apps/web/server.mjs",
     "build": "npm run demo",
