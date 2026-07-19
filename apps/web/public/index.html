@@ -3,337 +3,176 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Agent Blackbox</title>
+    <meta name="description" content="Agent Blackbox creates tamper-evident execution receipts for autonomous AI agents and anchors their proofs on Casper.">
+    <title>Agent Blackbox | Verifiable agent actions</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/logo-mark.svg">
     <link rel="stylesheet" href="/styles.css">
   </head>
-  <body>
-    <main class="page-shell">
-      <nav class="nav" aria-label="Primary">
+  <body data-page="home">
+    <header class="site-header">
+      <nav class="nav page-width" aria-label="Primary">
         <a class="brand" href="/" aria-label="Agent Blackbox home">
           <img class="brand-mark" src="/logo-mark.svg" alt="" aria-hidden="true">
           <span>Agent Blackbox</span>
         </a>
-        <div class="nav-links">
-          <a href="#intro">Overview</a>
-          <a href="#how">How it works</a>
-          <a href="#does">What it does</a>
-          <a href="#receipt">Receipt</a>
-          <a href="#verify">Verify</a>
-          <a id="contractLink" href="#" target="_blank" rel="noreferrer">Contract</a>
+        <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="navLinks">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="nav-links" id="navLinks">
+          <a class="is-active" href="/" aria-current="page">Overview</a>
+          <a href="/console.html">Console</a>
+          <a href="/verify.html">Verify</a>
+          <a href="https://github.com/nftkingiii/agent-blackbox/blob/master/docs/INTEGRATION.md" target="_blank" rel="noreferrer">Developers</a>
         </div>
-        <a class="login-link" id="receiptTxLink" href="#" target="_blank" rel="noreferrer">View proof</a>
+        <a class="nav-action" href="/console.html">Open console <span aria-hidden="true">&rarr;</span></a>
       </nav>
+    </header>
 
-      <section class="hero" aria-labelledby="pageTitle">
-        <p class="hero-kicker">Powered by Casper - governed end-to-end</p>
-        <h1 id="pageTitle">
-          <span>The Agent Trust OS</span>
-          <span>for Verifiable Actions</span>
-        </h1>
+    <main>
+      <section class="hero page-width" aria-labelledby="pageTitle">
+        <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Casper Testnet proof layer</p>
+        <h1 id="pageTitle">The Agent Trust OS<br>for Verifiable Actions</h1>
         <p class="hero-copy">
-          One deployable audit layer for AI agents that call tools, spend tokens,
-          sign transactions, and need a tamper-evident trail users can verify.
+          Capture what an AI agent intended, what policy allowed, what tool ran,
+          and what it cost. Keep private evidence off-chain and anchor the proof on Casper.
         </p>
         <div class="hero-actions">
-          <a class="primary-action" href="#how">See how it works</a>
-          <a class="secondary-action" href="#receipt">Open live receipt</a>
+          <a class="primary-action" href="/console.html">Explore a live receipt <span aria-hidden="true">&rarr;</span></a>
+          <a class="secondary-action" href="/verify.html">Verify receipt integrity</a>
         </div>
 
-        <div class="trust-row" aria-label="Product guarantees">
-          <span>Stack-agnostic</span>
-          <span>Policy-enforced</span>
-          <span>Audit-ready</span>
-          <span>Casper-anchored</span>
-        </div>
-      </section>
-
-      <section class="intro-band" id="intro">
-        <div class="intro-copy">
-          <p class="section-kicker">The state of agent accountability</p>
-          <h2>Agents are becoming operators. The missing layer is proof.</h2>
-          <p>
-            When an agent uses a paid API, touches a wallet, or triggers a
-            contract, a chat transcript is not enough. Agent Blackbox creates a
-            receipt for the action, keeps private evidence off-chain, and anchors
-            the digest on Casper.
-          </p>
-        </div>
-        <div class="intro-visual" aria-label="Agent Blackbox receipt overview">
-          <div class="visual-header">
-            <span>Runtime receipt</span>
-            <strong>Verified</strong>
+        <a class="product-preview" href="/console.html" aria-label="Open the Agent Blackbox live receipt console">
+          <div class="preview-toolbar">
+            <span class="preview-brand">Receipt console</span>
+            <span class="proof-state"><span class="status-dot" aria-hidden="true"></span> Anchored</span>
           </div>
-          <div class="visual-lanes">
-            <span>Intent</span>
-            <span>Policy</span>
-            <span>Tool call</span>
-            <span>Casper proof</span>
-          </div>
-          <div class="visual-proof">
-            <code>235470a70605...cfac359</code>
-          </div>
-        </div>
-      </section>
-
-      <section class="section-heading" id="how">
-        <p class="section-kicker">How it works</p>
-        <h2>Wrap the agent action, then write the proof.</h2>
-      </section>
-
-      <section class="domain-grid" aria-label="How Agent Blackbox works">
-        <article>
-          <span class="card-number">01</span>
-          <h3>Capture intent</h3>
-          <p>
-            The agent records the user goal, selected model, wallet identity,
-            and the exact action it is about to perform.
-          </p>
-        </article>
-        <article>
-          <span class="card-number">02</span>
-          <h3>Enforce policy</h3>
-          <p>
-            Runtime rules approve or block the action based on tool access,
-            spend limits, risk score, and required human review.
-          </p>
-        </article>
-        <article>
-          <span class="card-number">03</span>
-          <h3>Anchor receipt</h3>
-          <p>
-            The receipt hash and key metadata are submitted to Casper so teams
-            can verify later that the record was not changed.
-          </p>
-        </article>
-      </section>
-
-      <section class="guardrail-section" id="does">
-        <div>
-          <p class="section-kicker">What it does</p>
-          <h2>Autonomy needs a blackbox.</h2>
-          <p>
-            Agent Blackbox gives developers the receipt trail they need before
-            letting autonomous software spend, sign, deploy, or call external tools.
-          </p>
-        </div>
-        <div class="guardrail-grid">
-          <article>
-            <h3>Policy trail</h3>
-            <p>Shows which rule approved the action and the risk score at runtime.</p>
-          </article>
-          <article>
-            <h3>Cost record</h3>
-            <p>Stores the spend amount so paid API and wallet activity stays auditable.</p>
-          </article>
-          <article>
-            <h3>Evidence hashes</h3>
-            <p>Links private evidence without publishing prompts, documents, or raw outputs.</p>
-          </article>
-          <article>
-            <h3>Casper proof</h3>
-            <p>Anchors the receipt digest through a compact smart contract registry.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="proof-stage" id="receipt" aria-label="Live receipt verification">
-        <div class="proof-copy">
-          <p class="section-kicker">Agent receipt control plane</p>
-          <h2>Live verification console</h2>
-          <p>
-            This demo receipt was generated locally and submitted through the
-            deployed Casper Testnet contract.
-          </p>
-          <ul class="proof-points">
-            <li>The receipt body stays off-chain.</li>
-            <li>The backend stores the receipt through the product API.</li>
-            <li>The receipt hash is submitted to Casper Testnet.</li>
-            <li>The explorer links show the contract and sample transactions.</li>
-          </ul>
-        </div>
-
-        <div class="console" aria-live="polite">
-          <div class="console-topbar">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <div class="console-grid">
-            <article class="console-card integrity-card">
-              <span class="console-label">Receipt integrity</span>
-              <strong id="integrityState">Loading</strong>
-              <code id="receiptHash">Waiting for receipt</code>
-            </article>
-            <article class="console-card">
-              <span class="console-label">Policy</span>
-              <strong id="policyDecision">-</strong>
-              <small>Runtime decision</small>
-            </article>
-            <article class="console-card">
-              <span class="console-label">Risk</span>
-              <strong id="riskScore">-</strong>
-              <small>Policy score</small>
-            </article>
-            <article class="console-card">
-              <span class="console-label">Tool cost</span>
-              <strong id="toolCost">-</strong>
-              <small>Recorded spend</small>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="metrics" aria-label="Receipt summary">
-        <article>
-          <span>Agent</span>
-          <strong id="agentName">-</strong>
-        </article>
-        <article>
-          <span>Tool</span>
-          <strong id="toolName">-</strong>
-        </article>
-        <article>
-          <span>Deploy mode</span>
-          <strong id="deployMode">-</strong>
-        </article>
-        <article>
-          <span>API</span>
-          <strong id="apiStatus">-</strong>
-        </article>
-        <article>
-          <span>Network</span>
-          <strong>Casper Testnet</strong>
-        </article>
-      </section>
-
-      <section class="workspace">
-        <div class="timeline-panel">
-          <div class="panel-header">
-            <div>
-              <p class="section-kicker">Action pipeline</p>
-              <h2>Agent replay</h2>
+          <div class="preview-grid">
+            <div class="preview-primary">
+              <span class="data-label">Receipt integrity</span>
+              <strong>Verified</strong>
+              <code>235470a70605...cfac359</code>
             </div>
-            <span class="panel-status">4 events</span>
-          </div>
-          <ol class="timeline" id="timeline"></ol>
-        </div>
-
-        <aside class="detail-panel">
-          <div class="panel-header compact">
-            <div>
-              <p class="section-kicker">Receipt detail</p>
-              <h2>Evidence map</h2>
+            <div class="preview-stat">
+              <span class="data-label">Policy</span>
+              <strong>ALLOW</strong>
+            </div>
+            <div class="preview-stat">
+              <span class="data-label">Network</span>
+              <strong>Casper Testnet</strong>
             </div>
           </div>
-          <dl>
-            <div>
-              <dt>Receipt ID</dt>
-              <dd id="receiptId">-</dd>
-            </div>
-            <div>
-              <dt>Agent wallet</dt>
-              <dd id="agentWallet">-</dd>
-            </div>
-            <div>
-              <dt>Intent hash</dt>
-              <dd id="intentHash">-</dd>
-            </div>
-            <div>
-              <dt>Policy hash</dt>
-              <dd id="policyHash">-</dd>
-            </div>
-            <div>
-              <dt>Contract hash</dt>
-              <dd id="contractHash">-</dd>
-            </div>
-          </dl>
-          <div class="api-message is-ok" id="apiMessage" aria-live="polite">
-            <span class="console-label">Product API</span>
-            <strong id="apiMessageTitle">Connecting</strong>
-            <p id="apiMessageBody">Loading backend proof configuration.</p>
+          <span class="preview-link">Inspect receipt and proof <span aria-hidden="true">&rarr;</span></span>
+        </a>
+      </section>
+
+      <section class="problem-band">
+        <div class="page-width problem-layout">
+          <div>
+            <p class="section-kicker">The missing accountability layer</p>
+            <h2>Agent logs tell a story.<br>Receipts prove it.</h2>
           </div>
-          <div class="explorer-panel" aria-label="Casper Testnet explorer links">
-            <span class="console-label">Testnet explorer</span>
+          <div class="problem-copy">
             <p>
-              These links prove when the registry was installed and when the
-              sample receipt hash was submitted.
+              Agents now call paid APIs, touch wallets, and trigger production workflows.
+              When an action is disputed, internal logs are easy to alter and hard to share.
             </p>
-            <a id="contractExplorerLink" href="#" target="_blank" rel="noreferrer">
-              <span>Contract registry</span>
-              <strong id="contractExplorerLabel">Open contract</strong>
-            </a>
-            <a id="installTxExplorerLink" href="#" target="_blank" rel="noreferrer">
-              <span>Install transaction</span>
-              <strong id="installTxExplorerLabel">Open transaction</strong>
-            </a>
-            <a id="receiptTxExplorerLink" href="#" target="_blank" rel="noreferrer">
-              <span>Receipt transaction</span>
-              <strong id="receiptTxExplorerLabel">Open transaction</strong>
-            </a>
+            <p>
+              Agent Blackbox turns each important action into a portable, tamper-evident
+              receipt that developers, users, and auditors can independently verify.
+            </p>
           </div>
-        </aside>
+        </div>
       </section>
 
-      <section class="payload-panel">
-        <div class="panel-header">
-          <div>
-            <p class="section-kicker">Casper payload</p>
-            <h2>Prepared contract call</h2>
-          </div>
-          <button id="copyPayload" type="button">Copy JSON</button>
+      <section class="workflow page-width" aria-labelledby="workflowTitle">
+        <div class="section-heading">
+          <p class="section-kicker">One clear workflow</p>
+          <h2 id="workflowTitle">From agent action to durable proof.</h2>
+          <p>Integrate once, then produce the same audit trail across tools and agent stacks.</p>
         </div>
-        <pre id="payloadJson">Loading...</pre>
-      </section>
-
-      <section class="verifier-panel" id="verify" aria-labelledby="verifyTitle">
-        <div class="panel-header">
-          <div>
-            <p class="section-kicker">Receipt verifier</p>
-            <h2 id="verifyTitle">Paste a receipt. Detect tampering.</h2>
-          </div>
-          <span class="panel-status">Local hash check</span>
-        </div>
-
-        <div class="verifier-grid">
-          <div class="verifier-editor">
-            <label for="receiptInput">Receipt JSON</label>
-            <textarea id="receiptInput" spellcheck="false" rows="18">Loading receipt...</textarea>
-            <div class="verifier-actions">
-              <button id="verifyReceipt" type="button">Verify receipt</button>
-              <button id="tamperReceipt" class="secondary-button" type="button">Simulate tamper</button>
-              <button id="loadDemoReceipt" class="secondary-button" type="button">Load demo</button>
-              <label class="file-button" for="receiptFile">Upload JSON</label>
-              <input id="receiptFile" type="file" accept="application/json,.json">
+        <ol class="workflow-steps">
+          <li>
+            <span class="step-number">01</span>
+            <div>
+              <h3>Capture</h3>
+              <p>Record intent, agent identity, policy decision, tool result, and cost metadata.</p>
             </div>
-          </div>
+          </li>
+          <li>
+            <span class="step-number">02</span>
+            <div>
+              <h3>Hash</h3>
+              <p>Canonicalize the receipt and link private evidence through cryptographic hashes.</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">03</span>
+            <div>
+              <h3>Anchor</h3>
+              <p>Submit the compact receipt proof to the Agent Blackbox registry on Casper.</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">04</span>
+            <div>
+              <h3>Verify</h3>
+              <p>Recompute the hash at any time and compare it with the recorded proof.</p>
+            </div>
+          </li>
+        </ol>
+      </section>
 
-          <aside class="verifier-result" aria-live="polite">
-            <span class="console-label">Verification result</span>
-            <strong id="verifierState">Waiting</strong>
-            <p id="verifierSummary">
-              Load the demo receipt or paste your own receipt JSON to recompute
-              its canonical hash.
+      <section class="capability-band">
+        <div class="page-width capability-layout">
+          <div class="capability-copy">
+            <p class="section-kicker">Built for real agent operations</p>
+            <h2>Private where it should be. Verifiable where it matters.</h2>
+            <p>
+              Prompts, documents, and raw outputs can remain in your own infrastructure.
+              Casper stores the proof needed to detect whether the receipt changed later.
             </p>
-            <dl>
-              <div>
-                <dt>Receipt hash</dt>
-                <dd id="verifierExpected">-</dd>
-              </div>
-              <div>
-                <dt>Recomputed hash</dt>
-                <dd id="verifierActual">-</dd>
-              </div>
-              <div>
-                <dt>Casper proof</dt>
-                <dd id="verifierAnchor">-</dd>
-              </div>
-            </dl>
-          </aside>
+            <a class="text-link" href="/verify.html">Try the tamper check <span aria-hidden="true">&rarr;</span></a>
+          </div>
+          <div class="capability-list">
+            <article>
+              <span class="capability-index">A</span>
+              <div><h3>Policy trail</h3><p>See exactly which runtime rule approved or blocked the action.</p></div>
+            </article>
+            <article>
+              <span class="capability-index">B</span>
+              <div><h3>Cost record</h3><p>Make API spend and wallet activity part of the auditable receipt.</p></div>
+            </article>
+            <article>
+              <span class="capability-index">C</span>
+              <div><h3>Portable evidence</h3><p>Verify a receipt without trusting the original agent provider or database.</p></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="final-cta page-width">
+        <div>
+          <p class="section-kicker">See the proof, not just the pitch</p>
+          <h2>Inspect the complete receipt lifecycle.</h2>
+        </div>
+        <div class="final-actions">
+          <a class="primary-action" href="/console.html">Open receipt console <span aria-hidden="true">&rarr;</span></a>
+          <a class="secondary-action" href="https://github.com/nftkingiii/agent-blackbox" target="_blank" rel="noreferrer">View source</a>
         </div>
       </section>
     </main>
+
+    <footer class="footer">
+      <div class="page-width footer-inner">
+        <a class="brand" href="/">
+          <img class="brand-mark" src="/logo-mark.svg" alt="" aria-hidden="true">
+          <span>Agent Blackbox</span>
+        </a>
+        <p>Verifiable execution receipts for autonomous agents.</p>
+        <div><a href="/console.html">Console</a><a href="/verify.html">Verifier</a><a href="https://github.com/nftkingiii/agent-blackbox" target="_blank" rel="noreferrer">GitHub</a></div>
+      </div>
+    </footer>
 
     <script type="module" src="/app.js"></script>
   </body>

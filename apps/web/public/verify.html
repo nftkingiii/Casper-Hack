@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Recompute an Agent Blackbox receipt hash and detect tampering locally.">
+    <title>Receipt Verifier | Agent Blackbox</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body data-page="verify">
+    <header class="site-header">
+      <nav class="nav page-width" aria-label="Primary">
+        <a class="brand" href="/" aria-label="Agent Blackbox home"><img class="brand-mark" src="/logo-mark.svg" alt="" aria-hidden="true"><span>Agent Blackbox</span></a>
+        <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="navLinks"><span></span><span></span><span></span></button>
+        <div class="nav-links" id="navLinks">
+          <a href="/">Overview</a><a href="/console.html">Console</a><a class="is-active" href="/verify.html" aria-current="page">Verify</a><a href="https://github.com/nftkingiii/agent-blackbox/blob/master/docs/INTEGRATION.md" target="_blank" rel="noreferrer">Developers</a>
+        </div>
+        <a class="nav-action" href="/console.html">View receipt <span aria-hidden="true">&rarr;</span></a>
+      </nav>
+    </header>
+
+    <main class="product-page page-width">
+      <section class="page-intro verifier-intro">
+        <div>
+          <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Runs locally in your browser</p>
+          <h1>Receipt Verifier</h1>
+          <p>Paste or upload a receipt. Agent Blackbox recomputes its canonical SHA-256 hash and exposes any changed field.</p>
+        </div>
+        <a class="secondary-action" href="/console.html">Back to console</a>
+      </section>
+
+      <section class="verifier-workspace" aria-labelledby="verifyTitle">
+        <div class="verifier-editor">
+          <div class="panel-header">
+            <div><p class="section-kicker">Receipt input</p><h2 id="verifyTitle">JSON receipt</h2></div>
+            <label class="file-button" for="receiptFile">Upload JSON</label>
+            <input id="receiptFile" type="file" accept="application/json,.json">
+          </div>
+          <label class="sr-only" for="receiptInput">Receipt JSON</label>
+          <textarea id="receiptInput" spellcheck="false" rows="22">Loading demo receipt...</textarea>
+          <div class="verifier-actions">
+            <button id="verifyReceipt" class="primary-action" type="button">Verify receipt</button>
+            <button id="tamperReceipt" class="secondary-button" type="button">Simulate tamper</button>
+            <button id="loadDemoReceipt" class="secondary-button" type="button">Reset demo</button>
+          </div>
+        </div>
+
+        <aside class="verifier-result" aria-live="polite">
+          <div class="result-status"><span class="status-dot result-dot" aria-hidden="true"></span><span>Verification result</span></div>
+          <strong id="verifierState">Loading</strong>
+          <p id="verifierSummary">Preparing the bundled sample receipt.</p>
+          <dl class="result-details">
+            <div><dt>Recorded hash</dt><dd id="verifierExpected">-</dd></div>
+            <div><dt>Recomputed hash</dt><dd id="verifierActual">-</dd></div>
+            <div><dt>Casper proof</dt><dd id="verifierAnchor">-</dd></div>
+          </dl>
+          <a id="verifierProofLink" class="proof-link" href="#" target="_blank" rel="noreferrer">Open matching Testnet proof <span aria-hidden="true">&nearr;</span></a>
+        </aside>
+      </section>
+
+      <section class="verification-notes" aria-label="How verification works">
+        <article><span>01</span><div><h3>Canonicalize</h3><p>Object keys are sorted into a stable representation.</p></div></article>
+        <article><span>02</span><div><h3>Recompute</h3><p>The browser calculates SHA-256 without sending the receipt elsewhere.</p></div></article>
+        <article><span>03</span><div><h3>Compare</h3><p>The result is checked against the recorded hash and known Casper proof.</p></div></article>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

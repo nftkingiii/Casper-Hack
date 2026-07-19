@@ -7,57 +7,81 @@ const TESTNET_PROOF = {
   receiptId: "28f49029-999a-496c-8e64-ce94df16b7bf"
 };
 
+const page = document.body.dataset.page;
 let demoData = null;
-let apiConfig = null;
+
+function byId(id) {
+  return document.getElementById(id);
+}
+
+function setText(id, value) {
+  const element = byId(id);
+  if (element) element.textContent = value;
+}
+
+function setHref(id, value) {
+  const element = byId(id);
+  if (!element) return;
+  element.href = value;
+  element.removeAttribute("aria-disabled");
+}
+
+function initializeNavigation() {
+  const toggle = document.querySelector(".menu-toggle");
+  const links = byId("navLinks");
+  if (!toggle || !links) return;
+
+  toggle.addEventListener("click", () => {
+    const isOpen = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!isOpen));
+    toggle.setAttribute("aria-label", isOpen ? "Open navigation" : "Close navigation");
+    links.classList.toggle("is-open", !isOpen);
+  });
+
+  links.addEventListener("click", (event) => {
+    if (!event.target.closest("a")) return;
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-label", "Open navigation");
+    links.classList.remove("is-open");
+  });
+}
 
 async function loadDemo() {
   const response = await fetch("/demo-receipt.json");
-  if (!response.ok) {
-    throw new Error("Run `npm run demo` to generate the demo receipt.");
-  }
-
+  if (!response.ok) throw new Error("The demo receipt is unavailable.");
   return response.json();
 }
 
 async function loadApiConfig() {
   const response = await fetch("/api/config");
-  if (!response.ok) {
-    throw new Error("API config is unavailable.");
-  }
-
+  if (!response.ok) throw new Error("The product API is unavailable.");
   return response.json();
 }
 
 async function persistReceipt(receipt) {
   const response = await fetch("/api/receipts", {
     method: "POST",
-    headers: {
-      "content-type": "application/json"
-    },
+    headers: { "content-type": "application/json" },
     body: JSON.stringify(receipt)
   });
-
   const body = await response.json();
-  if (!response.ok) {
-    throw new Error(body.error ?? "Receipt API rejected the record.");
-  }
-
+  if (!response.ok) throw new Error(body.error ?? "Receipt persistence failed.");
   return body.record;
 }
 
-function text(id, value) {
-  document.getElementById(id).textContent = value;
-}
-
-function setHref(id, value) {
-  const element = document.getElementById(id);
-  element.href = value;
-  element.setAttribute("aria-disabled", "false");
+function applyApiConfig(config) {
+  Object.assign(TESTNET_PROOF, {
+    contractHash: config.contractHash,
+    contractPackageHash: config.contractPackageHash,
+    installTransaction: config.installTransaction,
+    receiptTransaction: config.sampleReceiptTransaction,
+    receiptHash: config.sampleReceiptHash,
+    receiptId: config.sampleReceiptId
+  });
 }
 
 function formatMotes(value) {
-  const cspr = Number(value) / 1_000_000_000;
-  return `${cspr.toFixed(2)} CSPR`;
+  return `${(Number(value) / 1_000_000_000).toFixed(2)} CSPR`;
 }
 
 function shortHash(value, start = 10, end = 8) {
@@ -74,91 +98,6 @@ function explorerContract(hash) {
   return `https://testnet.cspr.live/contract/${hash.replace(/^hash-/, "")}`;
 }
 
-function canonicalJson(value) {
-  return JSON.stringify(sortForCanonicalJson(value));
-}
-
-function sortForCanonicalJson(value) {
-  if (Array.isArray(value)) {
-    return value.map(sortForCanonicalJson);
-  }
-
-  if (value && typeof value === "object") {
-    return Object.keys(value)
-      .sort()
-      .reduce((acc, key) => {
-        acc[key] = sortForCanonicalJson(value[key]);
-        return acc;
-      }, {});
-  }
-
-  return value;
-}
-
-async function sha256Hex(value) {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(digest)]
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-async function hashObject(value) {
-  return sha256Hex(canonicalJson(value));
-}
-
-async function verifyReceiptObject(receipt) {
-  const { receiptHash, ...body } = receipt;
-  const actual = await hashObject(body);
-  return {
-    ok: receiptHash === actual,
-    expected: receiptHash ?? "-",
-    actual
-  };
-}
-
-function renderTimeline(receipt, deployResult) {
-  const payload = deployResult.payload ?? {};
-  const items = [
-    {
-      label: "Intent captured",
-      body: receipt.task.intent,
-      time: new Date(receipt.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    },
-    {
-      label: "Policy checked",
-      body: `${receipt.policy.decision} with risk score ${receipt.policy.riskScore}. ${receipt.policy.explanation}`,
-      time: "policy"
-    },
-    {
-      label: "Tool called",
-      body: `${receipt.toolCall.method} ${receipt.toolCall.target}; request and response hashes recorded.`,
-      time: "tool"
-    },
-    {
-      label: "Receipt anchored",
-      body: `${payload.entryPoint ?? "submit_receipt"} on ${payload.network ?? "casper-test"}; transaction ${shortHash(TESTNET_PROOF.receiptTransaction, 12, 10)}.`,
-      time: "Casper"
-    }
-  ];
-
-  const list = document.getElementById("timeline");
-  list.innerHTML = items
-    .map(
-      (item, index) => `
-        <li>
-          <span class="step-index">${String(index + 1).padStart(2, "0")}</span>
-          <time>${escapeHtml(item.time)}</time>
-          <div>
-            <strong>${escapeHtml(item.label)}</strong>
-            <p>${escapeHtml(item.body)}</p>
-          </div>
-        </li>
-      `
-    )
-    .join("");
-}
-
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -168,93 +107,139 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function render(data) {
-  demoData = data;
-  const { receipt, deployResult, verification } = data;
-  const payload = deployResult.payload ?? {};
-  const integrity = document.getElementById("integrityState");
-
-  text("integrityState", verification.ok ? "Verified" : "Mismatch");
-  integrity.classList.toggle("is-risk", !verification.ok);
-  text("receiptHash", receipt.receiptHash);
-  text("policyDecision", receipt.policy.decision);
-  text("riskScore", `${receipt.policy.riskScore}/100`);
-  text("agentName", receipt.agent.name);
-  text("toolCost", formatMotes(receipt.toolCall.costMotes));
-  text("deployMode", deployResult.mode);
-  text("apiStatus", "Syncing");
-  text("toolName", receipt.toolCall.tool);
-  text("receiptId", receipt.receiptId);
-  text("agentWallet", receipt.agent.wallet);
-  text("intentHash", receipt.task.intentHash);
-  text("policyHash", receipt.policy.policyHash);
-  text("contractHash", payload.contractHash ?? TESTNET_PROOF.contractHash);
-
-  setHref("contractLink", explorerContract(payload.contractHash ?? TESTNET_PROOF.contractHash));
-  setHref("receiptTxLink", explorerTransaction(TESTNET_PROOF.receiptTransaction));
-  setHref("contractExplorerLink", explorerContract(payload.contractHash ?? TESTNET_PROOF.contractHash));
-  setHref("installTxExplorerLink", explorerTransaction(TESTNET_PROOF.installTransaction));
-  setHref("receiptTxExplorerLink", explorerTransaction(TESTNET_PROOF.receiptTransaction));
-  text("contractExplorerLabel", shortHash(payload.contractHash ?? TESTNET_PROOF.contractHash, 12, 10));
-  text("installTxExplorerLabel", shortHash(TESTNET_PROOF.installTransaction, 12, 10));
-  text("receiptTxExplorerLabel", shortHash(TESTNET_PROOF.receiptTransaction, 12, 10));
-
-  renderTimeline(receipt, deployResult);
-  text("payloadJson", JSON.stringify({
-    ...payload,
-    proof: TESTNET_PROOF
-  }, null, 2));
-
-  loadReceiptIntoVerifier(receipt);
-  syncReceiptRecord(receipt).catch((error) => {
-    text("apiStatus", "Offline");
-    renderApiMessage("API sync unavailable", error.message, false);
-  });
+function sortForCanonicalJson(value) {
+  if (Array.isArray(value)) return value.map(sortForCanonicalJson);
+  if (value && typeof value === "object") {
+    return Object.keys(value).sort().reduce((result, key) => {
+      result[key] = sortForCanonicalJson(value[key]);
+      return result;
+    }, {});
+  }
+  return value;
 }
 
-async function syncReceiptRecord(receipt) {
-  const record = await persistReceipt(receipt);
-  text("apiStatus", "Persisted");
-  renderApiMessage(
-    "Receipt persisted",
-    `Stored by the product API as ${shortHash(record.receiptId, 10, 6)} with ${record.anchor.status} Casper proof state.`,
-    true
-  );
+async function sha256Hex(value) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function verifyReceiptObject(receipt) {
+  const { receiptHash, ...body } = receipt;
+  const actual = await sha256Hex(JSON.stringify(sortForCanonicalJson(body)));
+  return { ok: receiptHash === actual, expected: receiptHash ?? "-", actual };
+}
+
+function renderTimeline(receipt, deployResult) {
+  const list = byId("timeline");
+  if (!list) return;
+  const payload = deployResult.payload ?? {};
+  const items = [
+    { label: "Intent captured", body: receipt.task.intent, meta: new Date(receipt.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
+    { label: "Policy checked", body: `${receipt.policy.decision} with risk score ${receipt.policy.riskScore}. ${receipt.policy.explanation}`, meta: "Runtime policy" },
+    { label: "Tool called", body: `${receipt.toolCall.method} ${receipt.toolCall.target}; request and response hashes recorded.`, meta: receipt.toolCall.tool },
+    { label: "Receipt anchored", body: `${payload.entryPoint ?? "submit_receipt"} on ${payload.network ?? "casper-test"}; transaction ${shortHash(TESTNET_PROOF.receiptTransaction, 12, 10)}.`, meta: "Casper Testnet" }
+  ];
+
+  list.innerHTML = items.map((item, index) => `
+    <li>
+      <span class="step-index">${String(index + 1).padStart(2, "0")}</span>
+      <div class="timeline-content"><span class="timeline-meta">${escapeHtml(item.meta)}</span><strong>${escapeHtml(item.label)}</strong><p>${escapeHtml(item.body)}</p></div>
+    </li>
+  `).join("");
 }
 
 function renderApiMessage(title, body, ok) {
-  const panel = document.getElementById("apiMessage");
+  const panel = byId("apiMessage");
+  if (!panel) return;
   panel.classList.toggle("is-risk", ok === false);
   panel.classList.toggle("is-ok", ok === true);
-  text("apiMessageTitle", title);
-  text("apiMessageBody", body);
+  setText("apiMessageTitle", title);
+  setText("apiMessageBody", body);
 }
 
-function loadReceiptIntoVerifier(receipt) {
-  document.getElementById("receiptInput").value = JSON.stringify(receipt, null, 2);
-  renderVerifierMessage({
-    state: "Ready",
-    ok: true,
-    summary: "Demo receipt loaded. Click Verify receipt to recompute the canonical hash.",
-    expected: receipt.receiptHash,
-    actual: "-",
-    anchor: "Not checked yet"
+async function renderConsole(data) {
+  demoData = data;
+  const { receipt, deployResult, verification } = data;
+  const payload = deployResult.payload ?? {};
+  const contractHash = payload.contractHash ?? TESTNET_PROOF.contractHash;
+  const integrity = byId("integrityState");
+
+  setText("integrityState", verification.ok ? "Verified" : "Mismatch");
+  integrity?.classList.toggle("is-risk", !verification.ok);
+  setText("policyDecision", receipt.policy.decision);
+  setText("riskScore", `${receipt.policy.riskScore}/100`);
+  setText("toolCost", formatMotes(receipt.toolCall.costMotes));
+  setText("apiStatus", "Syncing");
+  setText("receiptId", receipt.receiptId);
+  setText("agentName", receipt.agent.name);
+  setText("agentWallet", receipt.agent.wallet);
+  setText("toolName", receipt.toolCall.tool);
+  setText("intentHash", receipt.task.intentHash);
+  setText("policyHash", receipt.policy.policyHash);
+
+  setHref("contractLink", explorerContract(contractHash));
+  setHref("receiptTxLink", explorerTransaction(TESTNET_PROOF.receiptTransaction));
+  setHref("contractExplorerLink", explorerContract(contractHash));
+  setHref("installTxExplorerLink", explorerTransaction(TESTNET_PROOF.installTransaction));
+  setHref("receiptTxExplorerLink", explorerTransaction(TESTNET_PROOF.receiptTransaction));
+  setText("contractExplorerLabel", shortHash(contractHash, 12, 10));
+  setText("installTxExplorerLabel", shortHash(TESTNET_PROOF.installTransaction, 12, 10));
+  setText("receiptTxExplorerLabel", shortHash(TESTNET_PROOF.receiptTransaction, 12, 10));
+
+  renderTimeline(receipt, deployResult);
+  setText("payloadJson", JSON.stringify({ ...payload, proof: TESTNET_PROOF }, null, 2));
+
+  try {
+    const record = await persistReceipt(receipt);
+    setText("apiStatus", "Persisted");
+    renderApiMessage("Receipt persisted", `Stored as ${shortHash(record.receiptId, 10, 6)} with ${record.anchor.status} Casper proof state.`, true);
+  } catch (error) {
+    setText("apiStatus", "Read only");
+    renderApiMessage("Console loaded in read-only mode", `${error.message} The bundled receipt and explorer proof remain available.`, false);
+  }
+}
+
+function initializeCopyButton() {
+  const button = byId("copyPayload");
+  if (!button) return;
+  button.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(byId("payloadJson").textContent);
+      button.textContent = "Copied";
+    } catch {
+      button.textContent = "Copy failed";
+    }
+    window.setTimeout(() => { button.textContent = "Copy JSON"; }, 1400);
   });
 }
 
 function renderVerifierMessage(result) {
-  const state = document.getElementById("verifierState");
+  const state = byId("verifierState");
+  if (!state) return;
   state.textContent = result.state;
   state.classList.toggle("is-risk", result.ok === false);
   state.classList.toggle("is-ok", result.ok === true);
-  text("verifierSummary", result.summary);
-  text("verifierExpected", result.expected ?? "-");
-  text("verifierActual", result.actual ?? "-");
-  text("verifierAnchor", result.anchor ?? "-");
+  byId("verifierState")?.closest(".verifier-result")?.classList.toggle("is-risk", result.ok === false);
+  setText("verifierSummary", result.summary);
+  setText("verifierExpected", result.expected ?? "-");
+  setText("verifierActual", result.actual ?? "-");
+  setText("verifierAnchor", result.anchor ?? "-");
+}
+
+function loadReceiptIntoVerifier(receipt) {
+  byId("receiptInput").value = JSON.stringify(receipt, null, 2);
+  renderVerifierMessage({
+    state: "Ready to verify",
+    ok: true,
+    summary: "The sample receipt is loaded. Verify it, then simulate a changed policy field to see tamper detection.",
+    expected: receipt.receiptHash,
+    actual: "Not computed yet",
+    anchor: "Not checked yet"
+  });
 }
 
 function parseReceiptInput() {
-  const parsed = JSON.parse(document.getElementById("receiptInput").value);
+  const parsed = JSON.parse(byId("receiptInput").value);
   return parsed.receipt ?? parsed;
 }
 
@@ -262,34 +247,19 @@ async function verifyReceiptFromInput() {
   try {
     const receipt = parseReceiptInput();
     const verification = await verifyReceiptObject(receipt);
-    const anchorMatchesDemo =
-      receipt.receiptId === TESTNET_PROOF.receiptId &&
-      verification.actual === TESTNET_PROOF.receiptHash;
-    const localOnly = verification.ok && !anchorMatchesDemo;
-
+    const anchorMatchesDemo = receipt.receiptId === TESTNET_PROOF.receiptId && verification.actual === TESTNET_PROOF.receiptHash;
     renderVerifierMessage({
-      state: verification.ok ? "Valid" : "Tampered",
+      state: verification.ok ? "Receipt verified" : "Tampering detected",
       ok: verification.ok,
       summary: verification.ok
-        ? localOnly
-          ? "The receipt is internally consistent. It does not match the bundled Casper Testnet sample proof."
-          : "The receipt hash matches the recomputed canonical hash and the bundled Casper Testnet sample proof."
-        : "The receipt body no longer matches its recorded receiptHash.",
+        ? anchorMatchesDemo ? "The canonical hash matches the receipt and the bundled Casper Testnet proof." : "The receipt is internally consistent, but it does not match the bundled Testnet sample proof."
+        : "At least one receipt field changed after the recorded hash was created.",
       expected: verification.expected,
       actual: verification.actual,
-      anchor: anchorMatchesDemo
-        ? `Matches ${shortHash(TESTNET_PROOF.receiptTransaction, 12, 10)}`
-        : "No matching bundled Testnet proof"
+      anchor: anchorMatchesDemo ? `Matches ${shortHash(TESTNET_PROOF.receiptTransaction, 12, 10)}` : "No bundled proof match"
     });
   } catch (error) {
-    renderVerifierMessage({
-      state: "Invalid JSON",
-      ok: false,
-      summary: error.message,
-      expected: "-",
-      actual: "-",
-      anchor: "-"
-    });
+    renderVerifierMessage({ state: "Invalid JSON", ok: false, summary: error.message, expected: "-", actual: "-", anchor: "-" });
   }
 }
 
@@ -298,82 +268,66 @@ function tamperReceiptInput() {
     const receipt = parseReceiptInput();
     receipt.policy = receipt.policy ?? {};
     receipt.policy.riskScore = Number(receipt.policy.riskScore ?? 0) + 41;
-    receipt.policy.explanation = "Tampered locally after the receipt hash was created.";
-    document.getElementById("receiptInput").value = JSON.stringify(receipt, null, 2);
+    receipt.policy.explanation = "Changed locally after the receipt hash was created.";
+    byId("receiptInput").value = JSON.stringify(receipt, null, 2);
     renderVerifierMessage({
-      state: "Tamper staged",
+      state: "Change staged",
       ok: false,
-      summary: "A policy field was changed without updating receiptHash. Run verification to see the mismatch.",
+      summary: "The policy data now differs from the signed receipt body. Select Verify receipt to expose the mismatch.",
       expected: receipt.receiptHash,
-      actual: "-",
+      actual: "Run verification",
       anchor: "Pending verification"
     });
   } catch (error) {
-    renderVerifierMessage({
-      state: "Invalid JSON",
-      ok: false,
-      summary: error.message,
-      expected: "-",
-      actual: "-",
-      anchor: "-"
-    });
+    renderVerifierMessage({ state: "Invalid JSON", ok: false, summary: error.message, expected: "-", actual: "-", anchor: "-" });
   }
 }
 
-document.getElementById("copyPayload").addEventListener("click", async () => {
-  const payload = document.getElementById("payloadJson").textContent;
-  await navigator.clipboard.writeText(payload);
-  document.getElementById("copyPayload").textContent = "Copied";
-  window.setTimeout(() => {
-    document.getElementById("copyPayload").textContent = "Copy JSON";
-  }, 1200);
-});
+function initializeVerifier() {
+  setHref("verifierProofLink", explorerTransaction(TESTNET_PROOF.receiptTransaction));
+  byId("verifyReceipt")?.addEventListener("click", verifyReceiptFromInput);
+  byId("tamperReceipt")?.addEventListener("click", tamperReceiptInput);
+  byId("loadDemoReceipt")?.addEventListener("click", () => demoData?.receipt && loadReceiptIntoVerifier(demoData.receipt));
+  byId("receiptFile")?.addEventListener("change", async (event) => {
+    const [file] = event.target.files;
+    if (!file) return;
+    byId("receiptInput").value = await file.text();
+    await verifyReceiptFromInput();
+  });
+}
 
-document.getElementById("verifyReceipt").addEventListener("click", verifyReceiptFromInput);
+async function initializeProductPage() {
+  const [configResult, demoResult] = await Promise.allSettled([loadApiConfig(), loadDemo()]);
+  if (configResult.status === "fulfilled") applyApiConfig(configResult.value);
 
-document.getElementById("tamperReceipt").addEventListener("click", tamperReceiptInput);
+  if (demoResult.status === "rejected") {
+    if (page === "console") {
+      setText("integrityState", "Unavailable");
+      setText("apiStatus", "Offline");
+      setText("payloadJson", demoResult.reason.message);
+      renderApiMessage("Demo receipt unavailable", demoResult.reason.message, false);
+    } else {
+      renderVerifierMessage({ state: "Unavailable", ok: false, summary: demoResult.reason.message, expected: "-", actual: "-", anchor: "-" });
+    }
+    return;
+  }
 
-document.getElementById("loadDemoReceipt").addEventListener("click", () => {
-  if (demoData?.receipt) {
+  demoData = demoResult.value;
+  if (page === "console") await renderConsole(demoData);
+  if (page === "verify") {
+    setHref("verifierProofLink", explorerTransaction(TESTNET_PROOF.receiptTransaction));
     loadReceiptIntoVerifier(demoData.receipt);
   }
-});
+}
 
-document.getElementById("receiptFile").addEventListener("change", async (event) => {
-  const [file] = event.target.files;
-  if (!file) return;
-  document.getElementById("receiptInput").value = await file.text();
-  await verifyReceiptFromInput();
-});
+initializeNavigation();
 
-Promise.allSettled([loadApiConfig(), loadDemo()])
-  .then(([configResult, demoResult]) => {
-    if (configResult.status === "fulfilled") {
-      apiConfig = configResult.value;
-      Object.assign(TESTNET_PROOF, {
-        contractHash: apiConfig.contractHash,
-        contractPackageHash: apiConfig.contractPackageHash,
-        installTransaction: apiConfig.installTransaction,
-        receiptTransaction: apiConfig.sampleReceiptTransaction,
-        receiptHash: apiConfig.sampleReceiptHash,
-        receiptId: apiConfig.sampleReceiptId
-      });
-      renderApiMessage("API connected", "The dashboard is reading Casper proof config from the backend.", true);
-    } else {
-      renderApiMessage("API offline", configResult.reason.message, false);
-    }
+if (page === "console") {
+  initializeCopyButton();
+  initializeProductPage();
+}
 
-    if (demoResult.status === "rejected") {
-      throw demoResult.reason;
-    }
-
-    render(demoResult.value);
-  })
-  .catch((error) => {
-    const integrity = document.getElementById("integrityState");
-    text("integrityState", "Missing demo");
-    integrity.classList.add("is-risk");
-    text("receiptHash", error.message);
-    text("apiStatus", "Unavailable");
-    text("payloadJson", error.stack ?? error.message);
-  });
+if (page === "verify") {
+  initializeVerifier();
+  initializeProductPage();
+}
