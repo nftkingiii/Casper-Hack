@@ -41,6 +41,41 @@
         <article><span>API</span><strong id="apiStatus">Connecting</strong></article>
       </section>
 
+      <section class="action-composer" aria-labelledby="composerTitle">
+        <div class="composer-heading">
+          <div>
+            <p class="section-kicker">Create your own proof</p>
+            <h2 id="composerTitle">Run the full receipt workflow</h2>
+            <p>Describe an agent action, create its receipt, then approve the Casper Testnet transaction in your wallet.</p>
+          </div>
+          <div class="wallet-control">
+            <span id="walletState">Wallet disconnected</span>
+            <button class="secondary-button" id="connectWallet" type="button">Connect wallet</button>
+          </div>
+        </div>
+        <form id="receiptComposer" class="composer-form">
+          <label>
+            <span>Agent intent</span>
+            <input id="actionIntent" name="intent" type="text" maxlength="180" required value="Check a payment request against policy and record the decision.">
+          </label>
+          <label>
+            <span>Tool</span>
+            <input id="actionTool" name="tool" type="text" maxlength="64" required value="policy-check">
+          </label>
+          <label>
+            <span>Cost in motes</span>
+            <input id="actionCost" name="cost" type="number" min="0" step="1" required value="250000000">
+          </label>
+          <button class="primary-action" id="createReceipt" type="submit">Create receipt</button>
+          <button class="primary-action" id="anchorReceipt" type="button" disabled>Sign and anchor</button>
+        </form>
+        <div id="workflowStatus" class="workflow-status" role="status" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <div><strong>Ready</strong><p>Create a receipt to prepare an unsigned Casper transaction.</p></div>
+        </div>
+        <div id="csprclick-ui" class="csprclick-host" aria-live="polite"></div>
+      </section>
+
       <div class="product-grid">
         <section class="primary-panel" aria-labelledby="replayTitle">
           <div class="panel-header">

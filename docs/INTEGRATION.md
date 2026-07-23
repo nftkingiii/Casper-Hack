@@ -71,6 +71,19 @@ const casper = createCasperBlackboxClient({
 const payload = casper.prepareSubmitReceipt(receipt);
 ```
 
+For an interactive dApp, the backend can construct an unsigned transaction for the connected account:
+
+```js
+const prepared = casper.buildUnsignedSubmitTransaction(receipt, publicKey);
+const result = await window.csprclick.send(prepared.transaction, publicKey);
+const proof = await casper.verifyReceiptTransaction(
+  result.transactionHash ?? result.deployHash,
+  receipt
+);
+```
+
+CSPR.click requests wallet approval and submits the transaction. CSPR.cloud read-back then checks that the processed transaction called the expected contract with the expected `receipt_id` and `receipt_hash`.
+
 ## Integration contract
 
 The Casper registry receives only compact receipt metadata:
@@ -90,4 +103,3 @@ To verify a receipt:
 3. SHA-256 hash the canonical JSON.
 4. Compare the recomputed hash to `receiptHash`.
 5. Compare `receiptHash` to the hash submitted to Casper.
-

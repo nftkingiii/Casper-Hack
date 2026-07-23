@@ -1,5 +1,8 @@
 import { createHash } from "node:crypto";
+import sdk from "casper-js-sdk";
 import { toContractRuntimeArgs } from "../core/receipt.mjs";
+
+const { Args, CLValue, ContractCallBuilder, PublicKey } = sdk;
 
 export function createCasperBlackboxClient(config = {}) {
   return {
@@ -8,6 +11,7 @@ export function createCasperBlackboxClient(config = {}) {
     csprCloudUrl: config.csprCloudUrl ?? "https://api.testnet.cspr.cloud",
     contractHash: config.contractHash ?? null,
     apiKey: config.apiKey ?? null,
+    paymentAmount: config.paymentAmount ?? "5000000000",
 
     prepareSubmitReceipt(receipt) {
       return {
@@ -46,6 +50,96 @@ export function createCasperBlackboxClient(config = {}) {
         mode: "prepared",
         events: [],
         message: "CSPR.cloud event query adapter is ready for contract-specific endpoint wiring."
+      };
+    },
+
+    buildUnsignedSubmitTransaction(receipt, publicKeyHex) {
+      if (!this.contractHash) throw new Error("A deployed contract hash is required.");
+      if (!publicKeyHex) throw new Error("Connect a Casper account before creating a transaction.");
+
+      const args = toContractRuntimeArgs(receipt);
+      const runtimeArgs = Args.fromMap(Object.fromEntries(
+        Object.entries(args).map(([key, value]) => [key, CLValue.newCLString(String(value))])
+      ));
+
+      const transaction = new ContractCallBuilder()
+        .from(PublicKey.fromHex(publicKeyHex))
+        .chainName(this.network)
+        .payment(Number(this.paymentAmount))
+        .byHash(this.contractHash.replace(/^hash-/, ""))
+        .entryPoint("submit_receipt")
+        .runtimeArgs(runtimeArgs)
+        .build();
+
+      return {
+        transaction: {
+          transaction: {
+            Version1: transaction.toJSON()
+          }
+        },
+        transactionHash: transaction.hash?.toHex?.() ?? null,
+        payload: this.prepareSubmitReceipt(receipt)
+      };
+    },
+
+    async verifyReceiptTransaction(transactionHash, receipt) {
+      if (!transactionHash) throw new Error("A Casper transaction hash is required.");
+      if (!this.apiKey) {
+        return {
+          ok: false,
+          indexed: false,
+          status: "awaiting-indexer",
+          source: "cspr.cloud",
+          message: "Set CSPR_CLOUD_API_KEY to enable indexed receipt read-back."
+        };
+      }
+
+      const response = await fetch(`${this.csprCloudUrl}/deploys/${transactionHash}`, {
+        headers: {
+          accept: "application/json",
+          authorization: this.apiKey
+        }
+      });
+
+      if (response.status === 404) {
+        return {
+          ok: false,
+          indexed: false,
+          status: "pending",
+          source: "cspr.cloud",
+          message: "The transaction has not been indexed yet."
+        };
+      }
+
+      if (!response.ok) throw new Error(`CSPR.cloud returned ${response.status}.`);
+
+      const body = await response.json();
+      const deploy = body.data ?? body;
+      const args = deploy.args ?? {};
+      const parsed = (name) => args[name]?.parsed ?? args[name];
+      const contractMatches =
+        String(deploy.contract_hash ?? "").toLowerCase() ===
+        this.contractHash.replace(/^hash-/, "").toLowerCase();
+      const receiptMatches =
+        parsed("receipt_id") === receipt.receiptId &&
+        parsed("receipt_hash") === receipt.receiptHash;
+      const processed = deploy.status === "processed" && !deploy.error_message;
+
+      return {
+        ok: processed && contractMatches && receiptMatches,
+        indexed: true,
+        status: deploy.status,
+        source: "cspr.cloud",
+        contractMatches,
+        receiptMatches,
+        errorMessage: deploy.error_message ?? null,
+        blockHash: deploy.block_hash ?? null,
+        blockHeight: deploy.block_height ?? null,
+        callerPublicKey: deploy.caller_public_key ?? null,
+        transactionHash,
+        message: processed && contractMatches && receiptMatches
+          ? "CSPR.cloud confirms the receipt ID and hash were processed by the Agent Blackbox contract."
+          : "The indexed transaction does not yet match every expected receipt proof field."
       };
     }
   };

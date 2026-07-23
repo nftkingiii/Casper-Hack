@@ -1,0 +1,12 @@
+{
+  "name": "@agent-blackbox/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Create and verify Casper-anchored execution receipts for AI agents.",
+  "exports": "./index.mjs",
+  "license": "MIT",
+  "peerDependencies": {
+    "casper-js-sdk": "^5.0.12"
+  }
+}

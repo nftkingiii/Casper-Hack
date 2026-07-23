@@ -59,6 +59,8 @@ Agent Blackbox gives users, teams, and auditors a shared record of agent behavio
 - Casper smart contract scaffold for receipt registry storage.
 - Railway-ready API server with durable receipt persistence.
 - Web dashboard for replaying agent decisions and inspecting receipt integrity.
+- CSPR.click wallet connection, transaction approval, and status updates.
+- CSPR.cloud indexed read-back that matches the contract, receipt ID, and receipt hash.
 - Paste/upload verifier for receipt JSON.
 - Tampering simulation that demonstrates hash mismatch detection.
 - CSPR.cloud-ready event/query adapter seam.
@@ -97,6 +99,9 @@ POST /api/receipts
 GET  /api/receipts/:receiptId
 POST /api/receipts/:receiptId/verify
 POST /api/receipts/:receiptId/anchor
+POST /api/receipts/:receiptId/transaction
+POST /api/receipts/:receiptId/confirm
+GET  /api/receipts/:receiptId/proof
 ```
 
 ## Developer integration
@@ -128,6 +133,7 @@ const deployPayload = casper.prepareSubmitReceipt(receipt);
 More detail:
 
 - [Developer integration guide](docs/INTEGRATION.md)
+- [Contract provenance](docs/CONTRACT_PROVENANCE.md)
 - [Railway deployment guide](docs/RAILWAY_DEPLOYMENT.md)
 - [Receipt format](docs/RECEIPT_FORMAT.md)
 - [Testing playbook](docs/TESTING.md)
@@ -136,6 +142,8 @@ More detail:
 ## Casper integration
 
 Agent Blackbox produces deterministic receipt hashes locally, prepares Casper runtime arguments, and anchors receipt metadata through the deployed `contracts/agent-blackbox` registry on Casper Testnet.
+
+The console can create a fresh receipt, request approval through CSPR.click, submit it from the connected Casper wallet, and confirm the indexed transaction through CSPR.cloud. Production wallet signing requires `CSPR_CLICK_APP_ID`; indexed confirmation requires `CSPR_CLOUD_API_KEY`.
 
 Required on-chain action:
 
@@ -177,3 +185,5 @@ If you prefer Casper's official build flow, compile the same contract directory 
 ## Positioning
 
 Agent Blackbox is not a yield bot, oracle, or KYC flow. It is accountability infrastructure for the agent economy: a verifiable audit layer that any future Casper AI agent can use before it spends, trades, deploys, or calls paid services.
+
+The reusable SDK entry point is available from `packages/sdk/index.mjs` as the internal `@agent-blackbox/sdk` package.

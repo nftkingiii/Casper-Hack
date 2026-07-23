@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Verifiable execution receipts for autonomous AI agents on Casper.",
+  "exports": {
+    "./sdk": "./packages/sdk/index.mjs"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nftkingiii/agent-blackbox.git"

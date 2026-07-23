@@ -21,6 +21,11 @@ This playbook is intentionally step-by-step and suitable for final review.
 15. Click `Load demo`.
 16. Click `Verify receipt` again.
 17. Confirm the receipt returns to `Valid`.
+18. In **Create your own proof**, connect a Casper Testnet wallet through CSPR.click.
+19. Change the agent intent and click `Create receipt`.
+20. Click `Sign and anchor`, approve the transaction, and wait for its transaction hash.
+21. Confirm the status reports either `Receipt anchored and verified` or a clearly labeled pending indexer state.
+22. Open the new receipt transaction from the proof ledger.
 
 ## Local test
 

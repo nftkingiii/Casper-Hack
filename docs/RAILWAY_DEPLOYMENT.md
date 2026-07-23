@@ -48,9 +48,15 @@ AGENT_BLACKBOX_INSTALL_TX=527101b5f588320530f091fdc390c852b9784df486722fae97fa51
 AGENT_BLACKBOX_SAMPLE_RECEIPT_ID=28f49029-999a-496c-8e64-ce94df16b7bf
 AGENT_BLACKBOX_SAMPLE_RECEIPT_HASH=235470a706053333103e6c12741c4cfa8e147ab1d0230a1343e075c55cfac359
 AGENT_BLACKBOX_SAMPLE_RECEIPT_TX=b59446b16e1b17baa4081ee9152b7f4ac42c48fb6ddb3d9e1b0f6e22a7dd36ad
+CSPR_CLICK_APP_ID=your-production-cspr-click-app-id
+CSPR_CLOUD_API_KEY=your-cspr-cloud-api-key
+CASPER_RPC_URL=https://node.testnet.casper.network/rpc
+CASPER_CALL_PAYMENT=5000000000
 ```
 
 `AGENT_BLACKBOX_API_KEY` protects write endpoints. Leave it unset for an open public demo, or set it when teams integrate Agent Blackbox server-to-server.
+
+Create the CSPR.click application ID in the CSPR.build console and authorize the Railway domain. Keep the CSPR.cloud API key server-side; the browser only receives a boolean capability flag from `/api/config`.
 
 ## Public endpoints
 
@@ -62,6 +68,9 @@ POST /api/receipts
 GET  /api/receipts/:receiptId
 POST /api/receipts/:receiptId/verify
 POST /api/receipts/:receiptId/anchor
+POST /api/receipts/:receiptId/transaction
+POST /api/receipts/:receiptId/confirm
+GET  /api/receipts/:receiptId/proof
 ```
 
 When `AGENT_BLACKBOX_API_KEY` is set, write requests need:

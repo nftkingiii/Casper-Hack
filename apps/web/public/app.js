@@ -9,6 +9,9 @@ const TESTNET_PROOF = {
 
 const page = document.body.dataset.page;
 let demoData = null;
+let productConfig = null;
+let activeAccount = null;
+let createdRecord = null;
 
 function byId(id) {
   return document.getElementById(id);
@@ -67,6 +70,15 @@ async function persistReceipt(receipt) {
   const body = await response.json();
   if (!response.ok) throw new Error(body.error ?? "Receipt persistence failed.");
   return body.record;
+}
+
+async function requestJson(url, options = {}) {
+  const response = await fetch(url, options);
+  const body = await response.json();
+  if (!response.ok && response.status !== 202) {
+    throw new Error(body.error ?? body.proof?.message ?? "The request failed.");
+  }
+  return body;
 }
 
 function applyApiConfig(config) {
@@ -155,6 +167,230 @@ function renderApiMessage(title, body, ok) {
   panel.classList.toggle("is-ok", ok === true);
   setText("apiMessageTitle", title);
   setText("apiMessageBody", body);
+}
+
+function renderWorkflowStatus(title, body, state = "ok") {
+  const panel = byId("workflowStatus");
+  if (!panel) return;
+  panel.dataset.state = state;
+  panel.classList.toggle("is-risk", state === "error");
+  panel.classList.toggle("is-pending", state === "pending");
+  const titleElement = panel.querySelector("strong");
+  const bodyElement = panel.querySelector("p");
+  if (titleElement) titleElement.textContent = title;
+  if (bodyElement) bodyElement.textContent = body;
+}
+
+function updateWalletState(account) {
+  activeAccount = account ?? null;
+  const publicKey = activeAccount?.public_key ?? activeAccount?.publicKey;
+  setText("walletState", publicKey ? shortHash(publicKey, 12, 8) : "Wallet disconnected");
+  const button = byId("connectWallet");
+  if (button) button.textContent = publicKey ? "Switch account" : "Connect wallet";
+}
+
+function loadExternalScript(src) {
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      if (window.csprclick) resolve();
+      else existing.addEventListener("load", resolve, { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.defer = true;
+    script.addEventListener("load", resolve, { once: true });
+    script.addEventListener("error", () => reject(new Error("CSPR.click could not be loaded.")), { once: true });
+    document.head.append(script);
+  });
+}
+
+async function initializeCsprClick(config) {
+  const connectButton = byId("connectWallet");
+  if (!connectButton) return;
+
+  if (!config.csprClickEnabled) {
+    connectButton.disabled = true;
+    renderWorkflowStatus(
+      "Wallet setup required",
+      "Set CSPR_CLICK_APP_ID on Railway to enable CSPR.click wallet approvals.",
+      "error"
+    );
+    return;
+  }
+
+  try {
+    window.clickUIOptions = {
+      uiContainer: "csprclick-ui",
+      rootAppElement: "body",
+      showTopBar: false,
+      show1ClickModal: true
+    };
+    window.clickSDKOptions = {
+      appName: "Agent Blackbox",
+      appId: config.csprClickAppId,
+      contentMode: "iframe",
+      chainName: "casper-test",
+      casperNode: config.casperNode,
+      providers: ["casper-wallet", "ledger", "metamask-snap"]
+    };
+
+    const loaded = new Promise((resolve, reject) => {
+      const timeout = window.setTimeout(
+        () => reject(new Error("CSPR.click initialization timed out.")),
+        15000
+      );
+      window.addEventListener("csprclick:loaded", () => {
+        window.clearTimeout(timeout);
+        resolve();
+      }, { once: true });
+    });
+    await loadExternalScript("https://cdn.cspr.click/ui/v1.12.0/csprclick-client-1.12.0.js");
+    await loaded;
+    if (!window.csprclick) throw new Error("CSPR.click did not expose its browser client.");
+
+    window.csprclick.on?.("csprclick:signed_in", (event) => updateWalletState(event.account ?? event));
+    window.csprclick.on?.("csprclick:switched_account", (event) => updateWalletState(event.account ?? event));
+    window.csprclick.on?.("csprclick:signed_out", () => updateWalletState(null));
+    window.csprclick.on?.("csprclick:disconnected", () => updateWalletState(null));
+    window.csprclick.on?.("csprclick:unsolicited_account_change", (event) => {
+      if (event.account) window.csprclick.signInWithAccount(event.account);
+    });
+
+    const restored = await window.csprclick.getActiveAccountAsync?.();
+    updateWalletState(restored);
+    renderWorkflowStatus(
+      "Wallet integration ready",
+      config.csprCloudEnabled
+        ? "Connect a wallet, create a receipt, and anchor it on Casper Testnet."
+        : "Wallet signing is ready. Add CSPR_CLOUD_API_KEY for indexed proof confirmation.",
+      "ok"
+    );
+  } catch (error) {
+    connectButton.disabled = true;
+    renderWorkflowStatus("Wallet integration unavailable", error.message, "error");
+  }
+}
+
+async function connectWallet() {
+  if (!window.csprclick) return;
+  if (activeAccount) window.csprclick.switchAccount();
+  else window.csprclick.signIn();
+}
+
+function composerInput() {
+  const source = demoData?.receipt;
+  if (!source) throw new Error("The receipt template is not loaded.");
+  const publicKey = activeAccount?.public_key ?? activeAccount?.publicKey ?? "wallet-not-connected";
+
+  return {
+    agent: {
+      ...source.agent,
+      wallet: publicKey
+    },
+    task: {
+      ...source.task,
+      intent: byId("actionIntent").value.trim()
+    },
+    policy: {
+      ...source.policy,
+      explanation: "The action was evaluated against the Agent Blackbox demo policy."
+    },
+    toolCall: {
+      ...source.toolCall,
+      tool: byId("actionTool").value.trim(),
+      request: { intent: byId("actionIntent").value.trim() },
+      response: { allowed: true },
+      costMotes: String(byId("actionCost").value)
+    },
+    chain: {
+      ...source.chain,
+      network: "casper-test",
+      contractPackageHash: productConfig.contractPackageHash,
+      deployHash: null,
+      blockHash: null
+    },
+    evidence: source.evidence
+  };
+}
+
+async function createCustomReceipt(event) {
+  event.preventDefault();
+  const button = byId("createReceipt");
+  try {
+    button.disabled = true;
+    renderWorkflowStatus("Creating receipt", "Canonicalizing the action and computing its SHA-256 proof.", "pending");
+    createdRecord = await persistReceipt(composerInput());
+    byId("anchorReceipt").disabled = false;
+    renderWorkflowStatus(
+      "Receipt created",
+      `${shortHash(createdRecord.receiptId, 12, 8)} is locally valid and ready for wallet approval.`,
+      "ok"
+    );
+  } catch (error) {
+    renderWorkflowStatus("Receipt creation failed", error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function anchorCustomReceipt() {
+  const button = byId("anchorReceipt");
+  try {
+    if (!createdRecord) throw new Error("Create a receipt first.");
+    if (!activeAccount) {
+      connectWallet();
+      throw new Error("Connect a wallet, then select Sign and anchor again.");
+    }
+    if (!window.csprclick) throw new Error("CSPR.click is unavailable.");
+
+    button.disabled = true;
+    const publicKey = activeAccount.public_key ?? activeAccount.publicKey;
+    renderWorkflowStatus("Preparing transaction", "Building the unsigned submit_receipt contract call.", "pending");
+    const prepared = await requestJson(`/api/receipts/${encodeURIComponent(createdRecord.receiptId)}/transaction`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ publicKey })
+    });
+
+    renderWorkflowStatus("Awaiting wallet approval", "Review and approve the Casper Testnet transaction.", "pending");
+    const result = await window.csprclick.send(
+      prepared.transaction,
+      publicKey,
+      (status) => renderWorkflowStatus("Casper transaction", `Current status: ${status}.`, "pending")
+    );
+    if (result?.cancelled) throw new Error("The wallet approval was cancelled.");
+    if (result?.error) throw new Error(result.error);
+
+    const transactionHash = result?.transactionHash ?? result?.deployHash;
+    if (!transactionHash) throw new Error("The wallet did not return a transaction hash.");
+    setHref("receiptTxLink", explorerTransaction(transactionHash));
+    setHref("receiptTxExplorerLink", explorerTransaction(transactionHash));
+    setText("receiptTxExplorerLabel", shortHash(transactionHash, 12, 10));
+
+    renderWorkflowStatus("Checking indexed proof", "Comparing the submitted receipt arguments through CSPR.cloud.", "pending");
+    const confirmation = await requestJson(`/api/receipts/${encodeURIComponent(createdRecord.receiptId)}/confirm`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ transactionHash })
+    });
+    renderWorkflowStatus(
+      confirmation.proof.ok ? "Receipt anchored and verified" : "Transaction submitted",
+      confirmation.proof.message,
+      confirmation.proof.ok ? "ok" : "pending"
+    );
+  } catch (error) {
+    renderWorkflowStatus("Anchor failed", error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function initializeReceiptComposer() {
+  byId("connectWallet")?.addEventListener("click", connectWallet);
+  byId("receiptComposer")?.addEventListener("submit", createCustomReceipt);
+  byId("anchorReceipt")?.addEventListener("click", anchorCustomReceipt);
 }
 
 async function renderConsole(data) {
@@ -298,7 +534,10 @@ function initializeVerifier() {
 
 async function initializeProductPage() {
   const [configResult, demoResult] = await Promise.allSettled([loadApiConfig(), loadDemo()]);
-  if (configResult.status === "fulfilled") applyApiConfig(configResult.value);
+  if (configResult.status === "fulfilled") {
+    productConfig = configResult.value;
+    applyApiConfig(configResult.value);
+  }
 
   if (demoResult.status === "rejected") {
     if (page === "console") {
@@ -313,7 +552,10 @@ async function initializeProductPage() {
   }
 
   demoData = demoResult.value;
-  if (page === "console") await renderConsole(demoData);
+  if (page === "console") {
+    await renderConsole(demoData);
+    if (productConfig) await initializeCsprClick(productConfig);
+  }
   if (page === "verify") {
     setHref("verifierProofLink", explorerTransaction(TESTNET_PROOF.receiptTransaction));
     loadReceiptIntoVerifier(demoData.receipt);
@@ -324,6 +566,7 @@ initializeNavigation();
 
 if (page === "console") {
   initializeCopyButton();
+  initializeReceiptComposer();
   initializeProductPage();
 }
 

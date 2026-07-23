@@ -26,6 +26,11 @@ const SAMPLE_RECEIPT_ID =
 const SAMPLE_RECEIPT_HASH =
   process.env.AGENT_BLACKBOX_SAMPLE_RECEIPT_HASH ??
   "235470a706053333103e6c12741c4cfa8e147ab1d0230a1343e075c55cfac359";
+const CSPR_CLICK_APP_ID = process.env.CSPR_CLICK_APP_ID ?? "";
+const CSPR_CLOUD_API_KEY = process.env.CSPR_CLOUD_API_KEY ?? "";
+const CASPER_CALL_PAYMENT = process.env.CASPER_CALL_PAYMENT ?? "5000000000";
+const CASPER_RPC_URL =
+  process.env.CASPER_RPC_URL ?? "https://node.testnet.casper.network/rpc";
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -37,7 +42,12 @@ const contentTypes = {
 };
 
 const store = new ReceiptStore();
-const casper = createCasperBlackboxClient({ contractHash: CONTRACT_HASH });
+const casper = createCasperBlackboxClient({
+  contractHash: CONTRACT_HASH,
+  nodeUrl: CASPER_RPC_URL,
+  apiKey: CSPR_CLOUD_API_KEY,
+  paymentAmount: CASPER_CALL_PAYMENT
+});
 
 function json(response, status, body) {
   response.writeHead(status, {
@@ -140,6 +150,11 @@ async function handleApi(request, response, url) {
       sampleReceiptId: SAMPLE_RECEIPT_ID,
       sampleReceiptHash: SAMPLE_RECEIPT_HASH,
       sampleReceiptTransaction: RECEIPT_TX,
+      csprClickAppId: CSPR_CLICK_APP_ID,
+      csprClickEnabled: Boolean(CSPR_CLICK_APP_ID),
+      csprCloudEnabled: Boolean(CSPR_CLOUD_API_KEY),
+      casperNode: CASPER_RPC_URL,
+      callPaymentMotes: CASPER_CALL_PAYMENT,
       writesRequireApiKey: Boolean(API_KEY)
     });
     return;
@@ -165,7 +180,9 @@ async function handleApi(request, response, url) {
     return;
   }
 
-  const receiptMatch = url.pathname.match(/^\/api\/receipts\/([^/]+)(?:\/(verify|anchor))?$/);
+  const receiptMatch = url.pathname.match(
+    /^\/api\/receipts\/([^/]+)(?:\/(verify|anchor|transaction|confirm|proof))?$/
+  );
   if (receiptMatch) {
     const [, receiptId, action] = receiptMatch;
     const record = await store.get(decodeURIComponent(receiptId));
@@ -202,6 +219,37 @@ async function handleApi(request, response, url) {
       });
 
       json(response, 200, { ok: true, payload, record: updated });
+      return;
+    }
+
+    if (action === "transaction" && request.method === "POST") {
+      const body = await readJson(request);
+      const prepared = casper.buildUnsignedSubmitTransaction(record.receipt, body.publicKey);
+      json(response, 200, { ok: true, ...prepared });
+      return;
+    }
+
+    if (action === "confirm" && request.method === "POST") {
+      const body = await readJson(request);
+      const proof = await casper.verifyReceiptTransaction(body.transactionHash, record.receipt);
+      const updated = await store.markAnchor(receiptId, {
+        status: proof.ok ? "anchored" : proof.status,
+        network: "casper-test",
+        contractHash: CONTRACT_HASH,
+        contractPackageHash: PACKAGE_HASH,
+        receiptHash: record.receiptHash,
+        receiptTransaction: body.transactionHash,
+        verification: proof
+      });
+      json(response, proof.ok ? 200 : 202, { ok: proof.ok, proof, record: updated });
+      return;
+    }
+
+    if (action === "proof" && request.method === "GET") {
+      const transactionHash = url.searchParams.get("transactionHash") ??
+        record.anchor?.receiptTransaction;
+      const proof = await casper.verifyReceiptTransaction(transactionHash, record.receipt);
+      json(response, proof.ok ? 200 : 202, { ok: proof.ok, proof });
       return;
     }
 
