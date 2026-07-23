@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Inspect a live Agent Blackbox execution receipt and its Casper Testnet proof.">
+    <meta name="description" content="Create, sign, and anchor a verifiable AI agent action receipt on Casper Testnet.">
     <title>Receipt Console | Agent Blackbox</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
@@ -14,116 +14,88 @@
         <a class="brand" href="/" aria-label="Agent Blackbox home"><img class="brand-mark" src="/logo-mark.svg" alt="" aria-hidden="true"><span>Agent Blackbox</span></a>
         <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="navLinks"><span></span><span></span><span></span></button>
         <div class="nav-links" id="navLinks">
-          <a href="/">Overview</a><a class="is-active" href="/console.html" aria-current="page">Console</a><a href="/verify.html">Verify</a><a href="https://github.com/nftkingiii/agent-blackbox/blob/master/docs/INTEGRATION.md" target="_blank" rel="noreferrer">Developers</a>
+          <a href="/">Overview</a><a class="is-active" href="/console.html" aria-current="page">Console</a><a href="/demo.html">Demo</a><a href="/verify.html">Verify</a><a href="https://github.com/nftkingiii/agent-blackbox/blob/master/docs/INTEGRATION.md" target="_blank" rel="noreferrer">Developers</a>
         </div>
-        <a class="nav-action" id="receiptTxLink" href="#" target="_blank" rel="noreferrer">View proof <span aria-hidden="true">&nearr;</span></a>
+        <a class="nav-action" href="/demo.html">View demo <span aria-hidden="true">&rarr;</span></a>
       </nav>
     </header>
 
     <main class="product-page page-width">
-      <section class="page-intro">
+      <section class="page-intro console-intro">
         <div>
-          <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Live sample receipt</p>
-          <h1>Receipt Console</h1>
-          <p>Follow one agent action from intent capture to a verifiable Casper Testnet anchor.</p>
+          <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Live Casper Testnet workflow</p>
+          <h1>Create a verifiable receipt</h1>
+          <p>Capture an agent action, approve its proof with your wallet, and anchor it on Casper.</p>
         </div>
-        <div class="page-intro-actions">
-          <a class="secondary-action" href="/verify.html">Open verifier</a>
-          <a class="primary-action" id="contractLink" href="#" target="_blank" rel="noreferrer">View contract <span aria-hidden="true">&nearr;</span></a>
-        </div>
+        <a class="secondary-action" href="/verify.html">Verify an existing receipt</a>
       </section>
 
-      <section class="status-strip" aria-label="Receipt status summary">
-        <article><span>Integrity</span><strong id="integrityState">Loading</strong></article>
-        <article><span>Policy</span><strong id="policyDecision">-</strong></article>
-        <article><span>Risk</span><strong id="riskScore">-</strong></article>
-        <article><span>Cost</span><strong id="toolCost">-</strong></article>
-        <article><span>API</span><strong id="apiStatus">Connecting</strong></article>
-      </section>
-
-      <section class="action-composer" aria-labelledby="composerTitle">
-        <div class="composer-heading">
-          <div>
-            <p class="section-kicker">Create your own proof</p>
-            <h2 id="composerTitle">Run the full receipt workflow</h2>
-            <p>Describe an agent action, create its receipt, then approve the Casper Testnet transaction in your wallet.</p>
+      <div class="console-workspace">
+        <section class="action-composer" aria-labelledby="composerTitle">
+          <div class="composer-heading">
+            <div>
+              <p class="section-kicker">New agent action</p>
+              <h2 id="composerTitle">Create and anchor a receipt</h2>
+              <p>Only the cryptographic proof is submitted on-chain. Detailed evidence remains off-chain.</p>
+            </div>
+            <div class="wallet-control">
+              <span id="walletState">Wallet disconnected</span>
+              <button class="secondary-button" id="connectWallet" type="button">Connect wallet</button>
+            </div>
           </div>
-          <div class="wallet-control">
-            <span id="walletState">Wallet disconnected</span>
-            <button class="secondary-button" id="connectWallet" type="button">Connect wallet</button>
-          </div>
-        </div>
-        <form id="receiptComposer" class="composer-form">
-          <label>
-            <span>Agent intent</span>
-            <input id="actionIntent" name="intent" type="text" maxlength="180" required value="Check a payment request against policy and record the decision.">
-          </label>
-          <label>
-            <span>Tool</span>
-            <input id="actionTool" name="tool" type="text" maxlength="64" required value="policy-check">
-          </label>
-          <label>
-            <span>Cost in motes</span>
-            <input id="actionCost" name="cost" type="number" min="0" step="1" required value="250000000">
-          </label>
-          <button class="primary-action" id="createReceipt" type="submit">Create receipt</button>
-          <button class="primary-action" id="anchorReceipt" type="button" disabled>Sign and anchor</button>
-        </form>
-        <div id="workflowStatus" class="workflow-status" role="status" aria-live="polite">
-          <span class="status-dot" aria-hidden="true"></span>
-          <div><strong>Ready</strong><p>Create a receipt to prepare an unsigned Casper transaction.</p></div>
-        </div>
-        <div id="csprclick-ui" class="csprclick-host" aria-live="polite"></div>
-      </section>
-
-      <div class="product-grid">
-        <section class="primary-panel" aria-labelledby="replayTitle">
-          <div class="panel-header">
-            <div><p class="section-kicker">Action lifecycle</p><h2 id="replayTitle">Agent replay</h2></div>
-            <span class="panel-status">4 recorded events</span>
-          </div>
-          <ol class="timeline" id="timeline"><li class="loading-row">Loading receipt events...</li></ol>
+          <form id="receiptComposer" class="composer-form console-form">
+            <label>
+              <span>Agent intent</span>
+              <input id="actionIntent" name="intent" type="text" maxlength="180" required value="Check a payment request against policy and record the decision.">
+            </label>
+            <label>
+              <span>Tool</span>
+              <input id="actionTool" name="tool" type="text" maxlength="64" required value="policy-check">
+            </label>
+            <label>
+              <span>Cost in motes</span>
+              <input id="actionCost" name="cost" type="number" min="0" step="1" required value="250000000">
+            </label>
+            <div class="composer-actions">
+              <button class="primary-action" id="createReceipt" type="submit">Create receipt</button>
+              <button class="primary-action" id="anchorReceipt" type="button" disabled>Sign and anchor</button>
+            </div>
+          </form>
+          <div id="csprclick-ui" class="csprclick-host" aria-live="polite"></div>
         </section>
 
-        <aside class="side-stack">
-          <section class="side-panel">
-            <div class="panel-header"><div><p class="section-kicker">Receipt detail</p><h2>Evidence map</h2></div></div>
-            <dl class="detail-list">
-              <div><dt>Receipt ID</dt><dd id="receiptId">-</dd></div>
-              <div><dt>Agent</dt><dd id="agentName">-</dd></div>
-              <div><dt>Agent wallet</dt><dd id="agentWallet">-</dd></div>
-              <div><dt>Tool</dt><dd id="toolName">-</dd></div>
-              <div><dt>Intent hash</dt><dd id="intentHash">-</dd></div>
-              <div><dt>Policy hash</dt><dd id="policyHash">-</dd></div>
-            </dl>
-          </section>
+        <aside class="console-progress" aria-labelledby="progressTitle">
+          <div>
+            <p class="section-kicker">Workflow status</p>
+            <h2 id="progressTitle">Receipt progress</h2>
+          </div>
+          <ol class="progress-steps" aria-label="Receipt workflow">
+            <li class="is-current" id="captureStep"><span>01</span><div><strong>Capture</strong><p>Describe the agent action.</p></div></li>
+            <li id="signStep"><span>02</span><div><strong>Sign</strong><p>Approve with a Testnet wallet.</p></div></li>
+            <li id="anchorStep"><span>03</span><div><strong>Anchor</strong><p>Confirm the Casper proof.</p></div></li>
+          </ol>
+          <div id="workflowStatus" class="workflow-status" role="status" aria-live="polite">
+            <span class="status-dot" aria-hidden="true"></span>
+            <div><strong>Ready</strong><p>Create a receipt to prepare an unsigned Casper transaction.</p></div>
+          </div>
         </aside>
       </div>
 
-      <section class="side-panel proof-panel proof-ledger" aria-labelledby="proofTitle">
-        <div class="proof-ledger-heading">
-          <div><p class="section-kicker">Casper Testnet</p><h2 id="proofTitle">On-chain proof</h2></div>
-          <p class="panel-copy">Open the registry and both transactions directly in the explorer.</p>
+      <section class="created-receipt" id="currentReceipt" aria-labelledby="currentReceiptTitle" hidden>
+        <div class="created-receipt-heading">
+          <div><p class="section-kicker">Current receipt</p><h2 id="currentReceiptTitle">Proof ready</h2></div>
+          <span class="receipt-state" id="createdAnchorState">Created off-chain</span>
         </div>
-        <div class="explorer-links">
-          <a id="contractExplorerLink" href="#" target="_blank" rel="noreferrer"><span>Contract registry</span><strong id="contractExplorerLabel">Loading</strong><i aria-hidden="true">&nearr;</i></a>
-          <a id="installTxExplorerLink" href="#" target="_blank" rel="noreferrer"><span>Install transaction</span><strong id="installTxExplorerLabel">Loading</strong><i aria-hidden="true">&nearr;</i></a>
-          <a id="receiptTxExplorerLink" href="#" target="_blank" rel="noreferrer"><span>Receipt transaction</span><strong id="receiptTxExplorerLabel">Loading</strong><i aria-hidden="true">&nearr;</i></a>
+        <dl class="created-receipt-details">
+          <div><dt>Receipt ID</dt><dd id="createdReceiptId">-</dd></div>
+          <div><dt>Receipt hash</dt><dd id="createdReceiptHash">-</dd></div>
+          <div><dt>Network</dt><dd>Casper Testnet</dd></div>
+        </dl>
+        <div class="created-receipt-actions">
+          <a class="secondary-action" id="createdReceiptLink" href="#" target="_blank" rel="noreferrer" hidden>Open transaction <span aria-hidden="true">&nearr;</span></a>
+          <a class="secondary-action" href="/verify.html">Open verifier</a>
         </div>
       </section>
-
-      <section class="payload-panel">
-        <div class="panel-header">
-          <div><p class="section-kicker">Developer view</p><h2>Prepared Casper contract call</h2></div>
-          <button id="copyPayload" class="copy-button" type="button">Copy JSON</button>
-        </div>
-        <pre id="payloadJson">Loading...</pre>
-      </section>
-
-      <div class="api-banner is-ok" id="apiMessage" role="status" aria-live="polite">
-        <span class="status-dot" aria-hidden="true"></span>
-        <div><strong id="apiMessageTitle">Connecting to product API</strong><p id="apiMessageBody">Loading backend proof configuration.</p></div>
-      </div>
     </main>
 
     <script type="module" src="/app.js"></script>

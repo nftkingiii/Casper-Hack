@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Inspect a complete Agent Blackbox receipt and its Casper Testnet proof.">
+    <title>Live Demo | Agent Blackbox</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body data-page="demo">
+    <header class="site-header">
+      <nav class="nav page-width" aria-label="Primary">
+        <a class="brand" href="/" aria-label="Agent Blackbox home"><img class="brand-mark" src="/logo-mark.svg" alt="" aria-hidden="true"><span>Agent Blackbox</span></a>
+        <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="navLinks"><span></span><span></span><span></span></button>
+        <div class="nav-links" id="navLinks">
+          <a href="/">Overview</a><a href="/console.html">Console</a><a class="is-active" href="/demo.html" aria-current="page">Demo</a><a href="/verify.html">Verify</a><a href="https://github.com/nftkingiii/agent-blackbox/blob/master/docs/INTEGRATION.md" target="_blank" rel="noreferrer">Developers</a>
+        </div>
+        <a class="nav-action" id="receiptTxLink" href="#" target="_blank" rel="noreferrer">View proof <span aria-hidden="true">&nearr;</span></a>
+      </nav>
+    </header>
+
+    <main class="product-page page-width">
+      <section class="page-intro">
+        <div>
+          <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Verified Testnet sample</p>
+          <h1>Receipt Demo</h1>
+          <p>Inspect one recorded agent action from intent capture to its Casper Testnet anchor.</p>
+        </div>
+        <div class="page-intro-actions">
+          <a class="secondary-action" href="/verify.html">Open verifier</a>
+          <a class="primary-action" id="contractLink" href="#" target="_blank" rel="noreferrer">View contract <span aria-hidden="true">&nearr;</span></a>
+        </div>
+      </section>
+
+      <section class="status-strip" aria-label="Receipt status summary">
+        <article><span>Integrity</span><strong id="integrityState">Loading</strong></article>
+        <article><span>Policy</span><strong id="policyDecision">-</strong></article>
+        <article><span>Risk</span><strong id="riskScore">-</strong></article>
+        <article><span>Cost</span><strong id="toolCost">-</strong></article>
+        <article><span>API</span><strong id="apiStatus">Connecting</strong></article>
+      </section>
+
+      <div class="product-grid">
+        <section class="primary-panel" aria-labelledby="replayTitle">
+          <div class="panel-header">
+            <div><p class="section-kicker">Action lifecycle</p><h2 id="replayTitle">Agent replay</h2></div>
+            <span class="panel-status">4 recorded events</span>
+          </div>
+          <ol class="timeline" id="timeline"><li class="loading-row">Loading receipt events...</li></ol>
+        </section>
+        <aside class="side-stack">
+          <section class="side-panel">
+            <div class="panel-header"><div><p class="section-kicker">Receipt detail</p><h2>Evidence map</h2></div></div>
+            <dl class="detail-list">
+              <div><dt>Receipt ID</dt><dd id="receiptId">-</dd></div>
+              <div><dt>Agent</dt><dd id="agentName">-</dd></div>
+              <div><dt>Agent wallet</dt><dd id="agentWallet">-</dd></div>
+              <div><dt>Tool</dt><dd id="toolName">-</dd></div>
+              <div><dt>Intent hash</dt><dd id="intentHash">-</dd></div>
+              <div><dt>Policy hash</dt><dd id="policyHash">-</dd></div>
+            </dl>
+          </section>
+        </aside>
+      </div>
+
+      <section class="side-panel proof-panel proof-ledger" aria-labelledby="proofTitle">
+        <div class="proof-ledger-heading">
+          <div><p class="section-kicker">Casper Testnet</p><h2 id="proofTitle">On-chain proof</h2></div>
+          <p class="panel-copy">Open the registry and both transactions directly in the explorer.</p>
+        </div>
+        <div class="explorer-links">
+          <a id="contractExplorerLink" href="#" target="_blank" rel="noreferrer"><span>Contract registry</span><strong id="contractExplorerLabel">Loading</strong><i aria-hidden="true">&nearr;</i></a>
+          <a id="installTxExplorerLink" href="#" target="_blank" rel="noreferrer"><span>Install transaction</span><strong id="installTxExplorerLabel">Loading</strong><i aria-hidden="true">&nearr;</i></a>
+          <a id="receiptTxExplorerLink" href="#" target="_blank" rel="noreferrer"><span>Receipt transaction</span><strong id="receiptTxExplorerLabel">Loading</strong><i aria-hidden="true">&nearr;</i></a>
+        </div>
+      </section>
+
+      <section class="payload-panel">
+        <div class="panel-header">
+          <div><p class="section-kicker">Developer view</p><h2>Prepared Casper contract call</h2></div>
+          <button id="copyPayload" class="copy-button" type="button">Copy JSON</button>
+        </div>
+        <pre id="payloadJson">Loading...</pre>
+      </section>
+
+      <div class="api-banner is-ok" id="apiMessage" role="status" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <div><strong id="apiMessageTitle">Connecting to product API</strong><p id="apiMessageBody">Loading backend proof configuration.</p></div>
+      </div>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

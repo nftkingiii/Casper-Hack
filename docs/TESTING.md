@@ -5,27 +5,21 @@ This playbook is intentionally step-by-step and suitable for final review.
 ## Live UI test
 
 1. Open the Railway production URL.
-2. Review the live verification console.
-3. Confirm the receipt integrity state is `Verified`.
-4. Confirm the API metric says `Persisted`.
-5. Open `/health` in a new tab and confirm `ok: true`.
-6. Open the contract registry link in the Testnet explorer block.
-7. Open the install transaction link.
-8. Open the receipt transaction link.
-9. Scroll to the Receipt verifier.
-10. Click `Verify receipt`.
-11. Confirm the result is `Valid`.
-12. Click `Simulate tamper`.
-13. Click `Verify receipt`.
-14. Confirm the result changes to `Tampered`.
-15. Click `Load demo`.
-16. Click `Verify receipt` again.
-17. Confirm the receipt returns to `Valid`.
-18. In **Create your own proof**, connect a Casper Testnet wallet through CSPR.click.
-19. Change the agent intent and click `Create receipt`.
-20. Click `Sign and anchor`, approve the transaction, and wait for its transaction hash.
-21. Confirm the status reports either `Receipt anchored and verified` or a clearly labeled pending indexer state.
-22. Open the new receipt transaction from the proof ledger.
+2. Open **Console** and connect a Casper Testnet wallet through CSPR.click.
+3. Change the agent intent and select `Create receipt`.
+4. Confirm the current receipt panel displays a receipt ID and SHA-256 hash.
+5. Select `Sign and anchor`, approve the transaction, and wait for its transaction hash.
+6. Confirm the status reports either `Receipt anchored and verified` or a clearly labeled pending indexer state.
+7. Open the new transaction from the current receipt panel.
+8. Open **Demo** from the navigation.
+9. Confirm receipt integrity is `Verified` and the API metric says `Persisted`.
+10. Open the contract registry, install transaction, and receipt transaction links.
+11. Open **Verify** and select `Verify receipt`.
+12. Confirm the result is `Receipt verified`.
+13. Select `Simulate tamper`, then `Verify receipt`.
+14. Confirm the result changes to `Tampering detected`.
+15. Select `Reset demo`, verify again, and confirm the receipt returns to `Receipt verified`.
+16. Open `/health` in a new tab and confirm `ok: true`.
 
 ## Local test
 

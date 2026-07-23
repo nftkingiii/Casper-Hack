@@ -181,6 +181,28 @@ function renderWorkflowStatus(title, body, state = "ok") {
   if (bodyElement) bodyElement.textContent = body;
 }
 
+function updateProgress(currentStep) {
+  const steps = ["captureStep", "signStep", "anchorStep"];
+  const activeIndex = steps.indexOf(currentStep);
+  steps.forEach((stepId, index) => {
+    const step = byId(stepId);
+    if (!step) return;
+    step.classList.toggle("is-complete", index < activeIndex);
+    step.classList.toggle("is-current", index === activeIndex);
+  });
+}
+
+function showCreatedReceipt(record) {
+  const panel = byId("currentReceipt");
+  if (!panel) return;
+  panel.hidden = false;
+  setText("createdReceiptId", record.receiptId);
+  setText("createdReceiptHash", record.receiptHash);
+  setText("createdAnchorState", "Created off-chain");
+  const link = byId("createdReceiptLink");
+  if (link) link.hidden = true;
+}
+
 function updateWalletState(account) {
   activeAccount = account ?? null;
   const publicKey = activeAccount?.public_key ?? activeAccount?.publicKey;
@@ -322,6 +344,8 @@ async function createCustomReceipt(event) {
     button.disabled = true;
     renderWorkflowStatus("Creating receipt", "Canonicalizing the action and computing its SHA-256 proof.", "pending");
     createdRecord = await persistReceipt(composerInput());
+    showCreatedReceipt(createdRecord);
+    updateProgress("signStep");
     byId("anchorReceipt").disabled = false;
     renderWorkflowStatus(
       "Receipt created",
@@ -346,6 +370,7 @@ async function anchorCustomReceipt() {
     if (!window.csprclick) throw new Error("CSPR.click is unavailable.");
 
     button.disabled = true;
+    updateProgress("signStep");
     const publicKey = activeAccount.public_key ?? activeAccount.publicKey;
     renderWorkflowStatus("Preparing transaction", "Building the unsigned submit_receipt contract call.", "pending");
     const prepared = await requestJson(`/api/receipts/${encodeURIComponent(createdRecord.receiptId)}/transaction`, {
@@ -365,9 +390,14 @@ async function anchorCustomReceipt() {
 
     const transactionHash = result?.transactionHash ?? result?.deployHash;
     if (!transactionHash) throw new Error("The wallet did not return a transaction hash.");
+    updateProgress("anchorStep");
     setHref("receiptTxLink", explorerTransaction(transactionHash));
     setHref("receiptTxExplorerLink", explorerTransaction(transactionHash));
     setText("receiptTxExplorerLabel", shortHash(transactionHash, 12, 10));
+    setHref("createdReceiptLink", explorerTransaction(transactionHash));
+    const createdReceiptLink = byId("createdReceiptLink");
+    if (createdReceiptLink) createdReceiptLink.hidden = false;
+    setText("createdAnchorState", "Submitted to Casper");
 
     renderWorkflowStatus("Checking indexed proof", "Comparing the submitted receipt arguments through CSPR.cloud.", "pending");
     const confirmation = await requestJson(`/api/receipts/${encodeURIComponent(createdRecord.receiptId)}/confirm`, {
@@ -380,6 +410,11 @@ async function anchorCustomReceipt() {
       confirmation.proof.message,
       confirmation.proof.ok ? "ok" : "pending"
     );
+    setText("createdAnchorState", confirmation.proof.ok ? "Anchored and verified" : "Pending confirmation");
+    if (confirmation.proof.ok) {
+      byId("anchorStep")?.classList.add("is-complete");
+      byId("anchorStep")?.classList.remove("is-current");
+    }
   } catch (error) {
     renderWorkflowStatus("Anchor failed", error.message, "error");
   } finally {
@@ -540,21 +575,25 @@ async function initializeProductPage() {
   }
 
   if (demoResult.status === "rejected") {
-    if (page === "console") {
+    if (page === "demo") {
       setText("integrityState", "Unavailable");
       setText("apiStatus", "Offline");
       setText("payloadJson", demoResult.reason.message);
       renderApiMessage("Demo receipt unavailable", demoResult.reason.message, false);
-    } else {
+    } else if (page === "verify") {
       renderVerifierMessage({ state: "Unavailable", ok: false, summary: demoResult.reason.message, expected: "-", actual: "-", anchor: "-" });
+    } else {
+      renderWorkflowStatus("Receipt template unavailable", demoResult.reason.message, "error");
     }
     return;
   }
 
   demoData = demoResult.value;
   if (page === "console") {
-    await renderConsole(demoData);
     if (productConfig) await initializeCsprClick(productConfig);
+  }
+  if (page === "demo") {
+    await renderConsole(demoData);
   }
   if (page === "verify") {
     setHref("verifierProofLink", explorerTransaction(TESTNET_PROOF.receiptTransaction));
@@ -565,8 +604,12 @@ async function initializeProductPage() {
 initializeNavigation();
 
 if (page === "console") {
-  initializeCopyButton();
   initializeReceiptComposer();
+  initializeProductPage();
+}
+
+if (page === "demo") {
+  initializeCopyButton();
   initializeProductPage();
 }
 

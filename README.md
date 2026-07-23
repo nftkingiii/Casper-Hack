@@ -27,11 +27,10 @@ Then open `http://localhost:4173`.
 
 In the UI:
 
-1. Review the live receipt console.
-2. Open the Casper Testnet explorer links in the evidence map.
-3. Scroll to **Receipt verifier**.
-4. Click **Verify receipt** to recompute the hash.
-5. Click **Simulate tamper**, then **Verify receipt** again to see the mismatch.
+1. Use **Console** to create and anchor a fresh receipt with a Casper Testnet wallet.
+2. Open **Demo** to inspect the sample lifecycle, evidence, payload, and explorer proofs.
+3. Open **Verify** to recompute a receipt hash locally.
+4. Click **Simulate tamper**, then verify again to expose the mismatch.
 
 ## Casper Testnet Deployment
 
