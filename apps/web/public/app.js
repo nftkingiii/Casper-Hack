@@ -409,16 +409,22 @@ async function anchorCustomReceipt() {
     });
 
     renderWorkflowStatus("Awaiting wallet approval", "Review and approve the Casper Testnet transaction.", "pending");
-    const result = await window.csprclick.send(
-      prepared.transaction,
-      publicKey,
-      (status) => renderWorkflowStatus("Casper transaction", `Current status: ${status}.`, "pending")
-    );
+    const result = await window.csprclick.sign(prepared.transaction, publicKey);
     if (result?.cancelled) throw new Error("The wallet approval was cancelled.");
     if (result?.error) throw new Error(result.error);
 
-    const transactionHash = result?.transactionHash ?? result?.deployHash;
-    if (!transactionHash) throw new Error("The wallet did not return a transaction hash.");
+    const signedTransaction = result?.transaction;
+    if (!signedTransaction?.Version1) {
+      throw new Error("The wallet did not return a signed Casper transaction.");
+    }
+
+    renderWorkflowStatus("Submitting transaction", "Relaying the signed transaction to Casper Testnet.", "pending");
+    const submission = await requestJson(`/api/receipts/${encodeURIComponent(createdRecord.receiptId)}/submit`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ transaction: signedTransaction })
+    });
+    const transactionHash = submission.transactionHash;
     updateProgress("anchorStep");
     setHref("receiptTxLink", explorerTransaction(transactionHash));
     setHref("receiptTxExplorerLink", explorerTransaction(transactionHash));

@@ -69,3 +69,37 @@ test("CSPR.cloud verification matches contract and receipt arguments", async () 
     globalThis.fetch = originalFetch;
   }
 });
+
+test("Casper client relays a wallet-signed transaction", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestBody;
+  globalThis.fetch = async (_url, options) => {
+    requestBody = JSON.parse(options.body);
+    return new Response(JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      result: {
+        transaction_hash: { Version1: "signed-transaction-hash" }
+      }
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    });
+  };
+
+  try {
+    const client = createCasperBlackboxClient({ contractHash });
+    const signedTransaction = {
+      Version1: {
+        approvals: [{ signer: publicKey, signature: "02signature" }]
+      }
+    };
+    const submitted = await client.submitSignedTransaction(signedTransaction);
+
+    assert.equal(submitted.transactionHash, "signed-transaction-hash");
+    assert.equal(requestBody.method, "account_put_transaction");
+    assert.deepEqual(requestBody.params.transaction, signedTransaction);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

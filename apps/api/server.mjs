@@ -181,7 +181,7 @@ async function handleApi(request, response, url) {
   }
 
   const receiptMatch = url.pathname.match(
-    /^\/api\/receipts\/([^/]+)(?:\/(verify|anchor|transaction|confirm|proof))?$/
+    /^\/api\/receipts\/([^/]+)(?:\/(verify|anchor|transaction|submit|confirm|proof))?$/
   );
   if (receiptMatch) {
     const [, receiptId, action] = receiptMatch;
@@ -226,6 +226,21 @@ async function handleApi(request, response, url) {
       const body = await readJson(request);
       const prepared = casper.buildUnsignedSubmitTransaction(record.receipt, body.publicKey);
       json(response, 200, { ok: true, ...prepared });
+      return;
+    }
+
+    if (action === "submit" && request.method === "POST") {
+      const body = await readJson(request);
+      const submitted = await casper.submitSignedTransaction(body.transaction);
+      const updated = await store.markAnchor(receiptId, {
+        status: "submitted",
+        network: "casper-test",
+        contractHash: CONTRACT_HASH,
+        contractPackageHash: PACKAGE_HASH,
+        receiptHash: record.receiptHash,
+        receiptTransaction: submitted.transactionHash
+      });
+      json(response, 200, { ok: true, ...submitted, record: updated });
       return;
     }
 

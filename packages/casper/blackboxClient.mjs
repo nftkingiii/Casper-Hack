@@ -82,6 +82,46 @@ export function createCasperBlackboxClient(config = {}) {
       };
     },
 
+    async submitSignedTransaction(transaction) {
+      const signedTransaction = transaction?.Version1
+        ? transaction
+        : transaction?.transaction;
+
+      if (!signedTransaction?.Version1) {
+        throw new Error("A signed Casper TransactionV1 is required.");
+      }
+      if (!signedTransaction.Version1.approvals?.length) {
+        throw new Error("The Casper transaction does not contain a wallet approval.");
+      }
+
+      const response = await fetch(this.nodeUrl, {
+        method: "POST",
+        headers: { accept: "application/json", "content-type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: Date.now(),
+          method: "account_put_transaction",
+          params: { transaction: signedTransaction }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Casper RPC returned HTTP ${response.status}.`);
+      }
+
+      const body = await response.json();
+      if (body.error) {
+        throw new Error(body.error.data ?? body.error.message ?? "Casper rejected the transaction.");
+      }
+
+      const transactionHash = body.result?.transaction_hash?.Version1;
+      if (!transactionHash) {
+        throw new Error("Casper RPC did not return a transaction hash.");
+      }
+
+      return { transactionHash, rpcResult: body.result };
+    },
+
     async verifyReceiptTransaction(transactionHash, receipt) {
       if (!transactionHash) throw new Error("A Casper transaction hash is required.");
       if (!this.apiKey) {
